@@ -1,0 +1,83 @@
+﻿@model WebBasedFileManager.Models.User
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <title>Register - FileManager</title>
+    <style>
+        .vertical-line {
+            border-left: 1px solid rgb(237, 229, 229);
+            height: 100%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            height: 100vh;
+        }
+
+        .section-content {
+            width: 45%;
+            padding: 20px;
+        }
+
+        #contactText {
+            font-size: 70px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Registration Form -->
+    <div class="section-container">
+        <div class="section-content">
+            <section class="section">
+                <center>
+                    <h1 class="title is-1" id="contactText">Register</h1>
+                    <form asp-action="Register" method="post">
+                        <div class="field">
+                            <label class="label" asp-for="Username"></label>
+                            <div class="control">
+                                <input asp-for="Username" class="input" type="text" placeholder="Username" />
+                            </div>
+                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Username)</p>
+                        </div>
+                        <div class="field">
+                            <label class="label" asp-for="Password"></label>
+                            <div class="control">
+                                <input asp-for="Password" type="password" class="input" placeholder="Password" />
+                            </div>
+                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Password)</p>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-link">Register</button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                </center>
+            </section>
+        </div>
+        <div class="vertical-line"></div>
+        <div class="section-content">
+            <section class="section">
+                <center>
+                    <h1 class="title is-1" id="contactText">File Manager</h1>
+                </center>
+            </section>
+        </div>
+    </div>
+
+   
+</body>
+</html>
