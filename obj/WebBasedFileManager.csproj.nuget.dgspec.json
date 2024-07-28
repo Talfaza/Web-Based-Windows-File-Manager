@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\chari\\OneDrive\\Bureau\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj": {}
+    "C:\\Users\\chari\\source\\repos\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj": {}
   },
   "projects": {
-    "C:\\Users\\chari\\OneDrive\\Bureau\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj": {
+    "C:\\Users\\chari\\source\\repos\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\chari\\OneDrive\\Bureau\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj",
+        "projectUniqueName": "C:\\Users\\chari\\source\\repos\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj",
         "projectName": "WebBasedFileManager",
-        "projectPath": "C:\\Users\\chari\\OneDrive\\Bureau\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj",
+        "projectPath": "C:\\Users\\chari\\source\\repos\\WebBasedFileManager\\WebBasedFileManager\\WebBasedFileManager.csproj",
         "packagesPath": "C:\\Users\\chari\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\chari\\OneDrive\\Bureau\\WebBasedFileManager\\WebBasedFileManager\\obj\\",
+        "outputPath": "C:\\Users\\chari\\source\\repos\\WebBasedFileManager\\WebBasedFileManager\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
           "C:\\Users\\chari\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -59,6 +55,10 @@
               "suppressParent": "All",
               "target": "Package",
               "version": "[8.0.7, )"
+            },
+            "SSH.NET": {
+              "target": "Package",
+              "version": "[2020.0.1, )"
             }
           },
           "imports": [
@@ -80,7 +80,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.204/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.303/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
