@@ -34,9 +34,8 @@ namespace WebBasedFileManager.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login(bool success = false)
+        public IActionResult Login()
         {
-            ViewBag.Success = success;
             return View();
         }
 
@@ -48,7 +47,7 @@ namespace WebBasedFileManager.Controllers
 
             if (loggedInUser != null)
             {
-                return RedirectToAction("FileManager", "FileManager");
+                return RedirectToAction("Index", "Ssh");
             }
             ModelState.AddModelError("", "Invalid login attempt.");
             return View(user);
