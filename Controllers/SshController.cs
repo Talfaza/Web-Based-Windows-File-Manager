@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Renci.SshNet;
+using System.Collections.Generic;
 using WebBasedFileManager.Models;
 
 namespace WebBasedFileManager.Controllers
 {
     public class SshController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
             return View();
@@ -14,14 +16,17 @@ namespace WebBasedFileManager.Controllers
         [HttpPost]
         public IActionResult Connect(SshConnectionModel model)
         {
-            using (var client = new SshClient(model.Ip, model.Hostname, model.Password))
+            var files = new List<string>();
+
+            using (var client = new SshClient(model.Ip, model.Username, model.Password))
             {
                 try
                 {
                     client.Connect();
                     if (client.IsConnected)
                     {
-                        ViewBag.Message = "Successfully connected to the server.";
+                        var cmd = client.RunCommand("dir /b");
+                        files.AddRange(cmd.Result.Split('\n'));
                         client.Disconnect();
                     }
                     else
@@ -35,7 +40,8 @@ namespace WebBasedFileManager.Controllers
                 }
             }
 
-            return View("Index");
+            ViewBag.Files = files;
+            return View("Index", model);
         }
     }
 }

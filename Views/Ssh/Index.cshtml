@@ -1,25 +1,85 @@
-﻿
-@model WebBasedFileManager.Models.SshConnectionModel
-
-<h2>SSH Connection</h2>
-
-<form asp-action="Connect" method="post">
-    <div class="form-group">
-        <label for="Hostname">Hostname</label>
-        <input type="text" class="form-control" id="Hostname" name="Hostname" required />
-    </div>
-    <div class="form-group">
-        <label for="Ip">IP</label>
-        <input type="text" class="form-control" id="Ip" name="Ip" required />
-    </div>
-    <div class="form-group">
-        <label for="Password">Password</label>
-        <input type="password" class="form-control" id="Password" name="Password" required />
-    </div>
-    <button type="submit" class="btn btn-primary">Connect</button>
-</form>
-
-@if (ViewBag.Message != null)
-{
-    <div class="alert alert-info">@ViewBag.Message</div>
+﻿@model WebBasedFileManager.Models.SshConnectionModel
+@{
+    ViewData["Title"] = "SSH Connection";
 }
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <title>SSH Connection</title>
+    <style>
+        .section-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .section-content {
+            width: 45%;
+            padding: 20px;
+        }
+
+        #sshText {
+            font-size: 70px;
+        }
+    </style>
+</head>
+<body>
+    <div class="section-container">
+        <div class="section-content">
+            <section class="section">
+                <center>
+                    <h1 class="title is-1" id="sshText">SSH Connection</h1>
+                    <form asp-action="Connect" method="post">
+                        <div class="field">
+                            <label class="label" asp-for="Ip"></label>
+                            <div class="control">
+                                <input asp-for="Ip" class="input" type="text" placeholder="IP Address" />
+                            </div>
+                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Ip)</p>
+                        </div>
+                        <div class="field">
+                            <label class="label" asp-for="Username"></label>
+                            <div class="control">
+                                <input asp-for="Username" class="input" type="text" placeholder="Username" />
+                            </div>
+                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Username)</p>
+                        </div>
+                        <div class="field">
+                            <label class="label" asp-for="Password"></label>
+                            <div class="control">
+                                <input asp-for="Password" type="password" class="input" placeholder="Password" />
+                            </div>
+                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Password)</p>
+                        </div>
+                        <div class="field">
+                            <div class="control">
+                                <button type="submit" class="button is-link">Connect</button>
+                            </div>
+                        </div>
+                    </form>
+                    @if (ViewBag.Files != null)
+                    {
+                        <h2 class="title is-3">Files:</h2>
+                        <ul>
+                            @foreach (var file in ViewBag.Files)
+                            {
+                                <li>@file</li>
+                            }
+                        </ul>
+                    }
+                    @if (ViewBag.Message != null)
+                    {
+                        <div class="notification is-danger">@ViewBag.Message</div>
+                    }
+                
+                </center>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
