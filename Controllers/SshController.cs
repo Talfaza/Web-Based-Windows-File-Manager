@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Renci.SshNet;
 using System.Collections.Generic;
+using System.Linq;
 using WebBasedFileManager.Models;
 
 namespace WebBasedFileManager.Controllers
 {
     public class SshController : Controller
     {
+        private static SshConnectionModel _currentModel;
+
         [HttpGet]
         public IActionResult Index()
         {
@@ -16,16 +19,36 @@ namespace WebBasedFileManager.Controllers
         [HttpPost]
         public IActionResult Connect(SshConnectionModel model)
         {
-            var files = new List<string>();
+            _currentModel = model;
+            var files = GetFilesAndDirectories("");
 
-            using (var client = new SshClient(model.Ip, model.Username, model.Password))
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = "";
+            return View("Index", model);
+        }
+
+        [HttpPost]
+        public IActionResult Navigate(string path)
+        {
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
+
+        private List<string> GetFilesAndDirectories(string path)
+        {
+            var files = new List<string>();
+            var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
+
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
             {
                 try
                 {
                     client.Connect();
                     if (client.IsConnected)
                     {
-                        var cmd = client.RunCommand("dir /b");
+                        var cmd = client.RunCommand($"dir /b {fullPath}");
                         files.AddRange(cmd.Result.Split('\n'));
                         client.Disconnect();
                     }
@@ -40,8 +63,7 @@ namespace WebBasedFileManager.Controllers
                 }
             }
 
-            ViewBag.Files = files;
-            return View("Index", model);
+            return files;
         }
     }
 }

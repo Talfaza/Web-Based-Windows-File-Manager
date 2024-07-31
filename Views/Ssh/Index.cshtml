@@ -9,23 +9,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>SSH Connection</title>
     <style>
-        .section-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+        button.is-link {
+            background-color: white;
+            color: black; /* Adjust text color to black */
         }
 
-        .section-content {
-            width: 45%;
-            padding: 20px;
-        }
-
-        #sshText {
-            font-size: 70px;
-        }
+            button.is-link.is-text {
+                background-color: transparent;
+                color: white;
+                border: none;
+            }
     </style>
 </head>
 <body>
@@ -35,48 +31,112 @@
                 <center>
                     <h1 class="title is-1" id="sshText">SSH Connection</h1>
                     <form asp-action="Connect" method="post">
-                        <div class="field">
-                            <label class="label" asp-for="Ip"></label>
-                            <div class="control">
-                                <input asp-for="Ip" class="input" type="text" placeholder="IP Address" />
+                        <div class="columns is-desktop is-multiline">
+                            <div class="column is-4">
+                                <div class="field">
+                                    <label class="label" asp-for="Ip"></label>
+                                    <div class="control">
+                                        <input asp-for="Ip" class="input" type="text" placeholder="IP Address" />
+                                    </div>
+                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Ip)</p>
+                                </div>
                             </div>
-                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Ip)</p>
+                            <div class="column is-4">
+                                <div class="field">
+                                    <label class="label" asp-for="Username"></label>
+                                    <div class="control">
+                                        <input asp-for="Username" class="input" type="text" placeholder="Username" />
+                                    </div>
+                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Username)</p>
+                                </div>
+                            </div>
+                            <div class="column is-4">
+                                <div class="field">
+                                    <label class="label" asp-for="Password"></label>
+                                    <div class="control">
+                                        <input asp-for="Password" type="password" class="input" placeholder="Password" />
+                                    </div>
+                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Password)</p>
+                                </div>
+                            </div>
                         </div>
                         <div class="field">
-                            <label class="label" asp-for="Username"></label>
                             <div class="control">
-                                <input asp-for="Username" class="input" type="text" placeholder="Username" />
-                            </div>
-                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Username)</p>
-                        </div>
-                        <div class="field">
-                            <label class="label" asp-for="Password"></label>
-                            <div class="control">
-                                <input asp-for="Password" type="password" class="input" placeholder="Password" />
-                            </div>
-                            <p class="help is-danger">@Html.ValidationMessageFor(model => model.Password)</p>
-                        </div>
-                        <div class="field">
-                            <div class="control">
-                                <button type="submit" class="button is-link">Connect</button>
+                                <button type="submit" class="button">Connect</button>
                             </div>
                         </div>
                     </form>
+
                     @if (ViewBag.Files != null)
                     {
-                        <h2 class="title is-3">Files:</h2>
-                        <ul>
-                            @foreach (var file in ViewBag.Files)
-                            {
-                                <li>@file</li>
-                            }
-                        </ul>
+                        var files = ViewBag.Files as List<string>;
+                        if (files != null && files.Count > 0)
+                        {
+                            <h2 class="title is-3">Files:</h2>
+                            <table class="table is-fullwidth is-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        // Safely cast and handle files
+                                        var lastFile = files.Last();
+                                        var remainingFiles = files.Take(files.Count - 1);
+
+                                        // Display the last file first
+                                        <tr>
+                                            <td>
+                                                @if (!lastFile.Contains("."))
+                                                {
+                                                    <form asp-action="Navigate" method="post" style="display: inline;">
+                                                        <i class="fa-regular fa-folder"></i>
+                                                        <input type="hidden" name="path" value="@lastFile" />
+                                                        <button type="submit" class="button is-link is-text">@lastFile</button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    @lastFile
+                                                }
+                                            </td>
+                                        </tr>
+
+                                        // Display remaining files
+                                        foreach (var file in remainingFiles)
+                                        {
+                                            var isDirectory = !file.Contains(".");
+
+                                            <tr>
+                                                <td>
+                                                    @if (isDirectory)
+                                                    {
+                                                        <form asp-action="Navigate" method="post" style="display: inline;">
+                                                            <i class="fa-regular fa-folder"></i>
+                                                            <input type="hidden" name="path" value="@file" />
+                                                            <button type="submit" class="button is-link is-text">@file</button>
+                                                        </form>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="fa-regular fa-file"></i>
+
+                                                        @file
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        }
                     }
+
                     @if (ViewBag.Message != null)
                     {
                         <div class="notification is-danger">@ViewBag.Message</div>
                     }
-                
                 </center>
             </section>
         </div>
