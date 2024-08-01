@@ -1,6 +1,6 @@
 ﻿@model WebBasedFileManager.Models.SshConnectionModel
 @{
-    ViewData["Title"] = "SSH Connection";
+    ViewData["Title"] = "File Manager";
 }
 
 <!DOCTYPE html>
@@ -14,7 +14,6 @@
     <style>
         button.is-link {
             background-color: white;
-            color: black; /* Adjust text color to black */
         }
 
             button.is-link.is-text {
@@ -29,7 +28,7 @@
         <div class="section-content">
             <section class="section">
                 <center>
-                    <h1 class="title is-1" id="sshText">SSH Connection</h1>
+                    <h1 class="title is-1" id="sshText">File Manager</h1>
                     <form asp-action="Connect" method="post">
                         <div class="columns is-desktop is-multiline">
                             <div class="column is-4">
@@ -72,10 +71,10 @@
                         var files = ViewBag.Files as List<string>;
                         if (files != null && files.Count > 0)
                         {
-                            <h2 class="title is-3">Files:</h2>
                             <table class="table is-fullwidth is-bordered">
                                 <thead>
                                     <tr>
+                                        <th><input type="checkbox" id="selectAll"></th>
                                         <th>File Name</th>
                                     </tr>
                                 </thead>
@@ -85,8 +84,8 @@
                                         var lastFile = files.Last();
                                         var remainingFiles = files.Take(files.Count - 1);
 
-                                        // Display the last file first
                                         <tr>
+                                            <td></td>
                                             <td>
                                                 @if (!lastFile.Contains("."))
                                                 {
@@ -109,6 +108,7 @@
                                             var isDirectory = !file.Contains(".");
 
                                             <tr>
+                                                <td><input type="checkbox" class="fileCheckbox"></td>
                                                 <td>
                                                     @if (isDirectory)
                                                     {
@@ -121,7 +121,6 @@
                                                     else
                                                     {
                                                         <i class="fa-regular fa-file"></i>
-
                                                         @file
                                                     }
                                                 </td>
@@ -130,16 +129,30 @@
                                     }
                                 </tbody>
                             </table>
+                            <button class="button is-link is-outlined m-2"> <i class="fa-solid fa-plus"></i> &nbspAdd File</button>
+                            <button class="button is-info is-outlined m-2"> <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbspMove File</button>
+                            <button class="button is-warning is-outlined m-2"> <i class="fa-solid fa-file-zipper"></i> &nbspCompress File</button>
+                            <button class="button is-success is-outlined m-2"> <i class="fa-solid fa-file-zipper"></i> &nbspDecompress File</button>
+                            <button class="button is-danger is-outlined m-2"> <i class="fa-solid fa-trash-can"></i> &nbspDelete File</button>
                         }
                     }
 
                     @if (ViewBag.Message != null)
                     {
-                        <div class="notification is-danger">@ViewBag.Message</div>
+                        <div>@ViewBag.Message</div>
                     }
                 </center>
             </section>
         </div>
     </div>
+
+    <script>
+        document.getElementById('selectAll').addEventListener('change', function () {
+            var checkboxes = document.querySelectorAll('.fileCheckbox');
+            checkboxes.forEach(function (checkbox) {
+                checkbox.checked = this.checked;
+            }, this);
+        });
+    </script>
 </body>
 </html>
