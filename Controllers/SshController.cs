@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Renci.SshNet;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using WebBasedFileManager.Models;
 
 namespace WebBasedFileManager.Controllers
@@ -36,6 +36,42 @@ namespace WebBasedFileManager.Controllers
             return View("Index", _currentModel);
         }
 
+        [HttpPost]
+        public IActionResult Delete(List<string> items)
+        {
+            var path = Request.Form["currentPath"];
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        foreach (var item in items)
+                        {
+                            var fullPath = string.IsNullOrEmpty(path) ? item : $"{path}\\{item}";
+                            var cmd = client.RunCommand($"del /q \"{fullPath}\" & rmdir /q /s \"{fullPath}\"");
+                            cmd.Execute();
+                        }
+                        client.Disconnect();
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                }
+            }
+
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
+
         private List<string> GetFilesAndDirectories(string path)
         {
             var files = new List<string>();
@@ -48,8 +84,8 @@ namespace WebBasedFileManager.Controllers
                     client.Connect();
                     if (client.IsConnected)
                     {
-                        var cmd = client.RunCommand($"dir /b {fullPath}");
-                        files.AddRange(cmd.Result.Split('\n'));
+                        var cmd = client.RunCommand($"dir /b \"{fullPath}\"");
+                        files.AddRange(cmd.Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
                         client.Disconnect();
                     }
                     else

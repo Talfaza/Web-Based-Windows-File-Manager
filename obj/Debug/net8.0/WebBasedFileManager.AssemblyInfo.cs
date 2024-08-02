@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WebBasedFileManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f83e4ffba84d57a8d7a05e61a4d63701c5de91f9")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05f27344fc03cb91a461426227e39fb09b8ae06d")]
 [assembly: System.Reflection.AssemblyProductAttribute("WebBasedFileManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WebBasedFileManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
