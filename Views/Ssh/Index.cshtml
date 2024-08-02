@@ -92,7 +92,7 @@
                                                     <form asp-action="Navigate" method="post" style="display: inline;">
                                                         <i class="fa-regular fa-folder"></i>
                                                         <input type="hidden" name="path" value="@lastFile" />
-                                                        <button type="submit" class="button is-link is-text">@lastFile</button>
+                                                        <button type="submit" class="button is-link is-text folder-button" data-folder-name="@lastFile">@lastFile</button>
                                                     </form>
                                                 }
                                                 else
@@ -115,7 +115,7 @@
                                                         <form asp-action="Navigate" method="post" style="display: inline;">
                                                             <i class="fa-regular fa-folder"></i>
                                                             <input type="hidden" name="path" value="@file" />
-                                                            <button type="submit" class="button is-link is-text">@file</button>
+                                                            <button type="submit" class="button is-link is-text folder-button" data-folder-name="@file">@file</button>
                                                         </form>
                                                     }
                                                     else
@@ -152,6 +152,37 @@
             checkboxes.forEach(function (checkbox) {
                 checkbox.checked = this.checked;
             }, this);
+        });
+
+        // Debugging: Ensure the script runs
+        console.log("Script loaded");
+
+        document.querySelectorAll('.folder-button').forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                // Prevent form submission for logging purpose
+                event.preventDefault();
+                var folderName = this.getAttribute('data-folder-name');
+
+                // Get the current path from localStorage or default to '.'
+                var currentPath = localStorage.getItem('selectedFolder') || '.';
+
+                if (folderName === '') {
+                    // If folderName is empty, reset path to '.'
+                    localStorage.setItem('selectedFolder', '.');
+                    // Optionally trigger form submission or handle path update
+                    this.closest('form').submit();
+                } else {
+                    // Update path
+                    var newPath = currentPath === '.' ? `./${folderName}` : `${currentPath}/${folderName}`;
+                    console.log("Folder Path:", newPath);
+
+                    // Store the updated path in localStorage
+                    localStorage.setItem('selectedFolder', newPath);
+
+                    // Submit the form after updating the path
+                    this.closest('form').submit();
+                }
+            });
         });
     </script>
 </body>
