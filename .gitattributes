@@ -1,4 +1,54 @@
-*.cs linguist-language=C#
-*.html linguist-documentation
-*.css linguist-documentation
-*.js linguist-documentation
+# Ensure consistent line endings for C# files
+*.cs text eol=lf
+
+# Treat binary files
+*.dll binary
+*.exe binary
+*.png binary
+*.jpg binary
+*.gif binary
+
+# Handle merge conflicts for specific file types
+*.cs merge=union
+
+# Ensure consistency in other text files
+*.config text
+*.xml text
+*.json text
+
+# Ensure that Visual Studio solution files are treated as text
+*.sln text
+*.csproj text
+*.vbproj text
+
+# Ensure consistent handling for common IDE configuration files
+*.user text
+*.suo text
+*.ncb text
+# Ensure consistent line endings for C# files
+*.cs text eol=lf
+
+# Treat binary files
+*.dll binary
+*.exe binary
+*.png binary
+*.jpg binary
+*.gif binary
+
+# Handle merge conflicts for specific file types
+*.cs merge=union
+
+# Ensure consistency in other text files
+*.config text
+*.xml text
+*.json text
+
+# Ensure that Visual Studio solution files are treated as text
+*.sln text
+*.csproj text
+*.vbproj text
+
+# Ensure consistent handling for common IDE configuration files
+*.user text
+*.suo text
+*.ncb text
