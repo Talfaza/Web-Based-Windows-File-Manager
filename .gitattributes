@@ -1,1 +1,4 @@
 *.cs linguist-language=C#
+*.html linguist-documentation
+*.css linguist-documentation
+*.js linguist-documentation
