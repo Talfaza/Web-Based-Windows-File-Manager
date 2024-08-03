@@ -31,6 +31,11 @@
             .buttons-container .button {
                 margin: 0.5rem;
             }
+
+        /* Hide the first row */
+        .hide-first-row {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -106,7 +111,7 @@
                                             var lastFile = files.Last();
                                             var remainingFiles = files.Take(files.Count - 1);
 
-                                            <tr>
+                                            <tr class="hide-first-row">
                                                 <td><input type="checkbox" class="fileCheckbox" name="items" value="@lastFile"></td>
                                                 <td>
                                                     @if (!lastFile.Contains("."))
@@ -183,7 +188,7 @@
 
     <script>
         document.getElementById('selectAll').addEventListener('change', function () {
-            var checkboxes = document.querySelectorAll('.fileCheckbox');
+            var checkboxes = document.querySelectorAll('.fileCheckbox:not(.hide-first-row .fileCheckbox)');
             checkboxes.forEach(function (checkbox) {
                 checkbox.checked = this.checked;
             }, this);
