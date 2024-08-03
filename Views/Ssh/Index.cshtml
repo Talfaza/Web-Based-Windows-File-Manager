@@ -21,6 +21,16 @@
                 color: white;
                 border: none;
             }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+            .buttons-container .button {
+                margin: 0.5rem;
+            }
     </style>
 </head>
 <body>
@@ -74,14 +84,13 @@
                             <form asp-action="Delete" method="post" id="deleteForm">
                                 <input type="hidden" name="currentPath" id="currentPath" value="@ViewBag.CurrentPath" />
 
-                                <!-- Buttons placed above the table -->
-                                <div class="buttons mb-4">
-                                    <button type="button" id="navigateUp" class="button is-link is-outlined m-2"><i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up</button>
-                                    <button class="button is-link is-outlined m-2"> <i class="fa-solid fa-plus"></i> &nbspAdd File</button>
-                                    <button class="button is-info is-outlined m-2"> <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbspMove File</button>
-                                    <button class="button is-warning is-outlined m-2"> <i class="fa-solid fa-file-zipper"></i> &nbspCompress File</button>
-                                    <button class="button is-success is-outlined m-2"> <i class="fa-solid fa-file-zipper"></i> &nbspDecompress File</button>
-                                    <button type="submit" class="button is-danger is-outlined m-2"> <i class="fa-solid fa-trash-can"></i> &nbspDelete File</button>
+                                <div class="buttons-container">
+                                    <button type="button" id="navigateUp" class="button is-primary is-outlined"><i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up</button>
+                                    <button class="button is-link is-outlined"> <i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
+                                    <button class="button is-info is-outlined"> <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File</button>
+                                    <button type="button" id="compressButton" class="button is-warning is-outlined"> <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress</button>
+                                    <button class="button is-success is-outlined"> <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress</button>
+                                    <button type="button" id="deleteButton" class="button is-danger is-outlined"> <i class="fa-solid fa-trash-can"></i> &nbsp;Delete</button>
                                 </div>
 
                                 <table class="table is-fullwidth is-bordered">
@@ -155,6 +164,23 @@
         </div>
     </div>
 
+    <div class="modal" id="deleteModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Confirm Deletion</p>
+                <button class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+                <p>Are you sure you want to delete the selected files?</p>
+            </section>
+            <footer class="modal-card-foot">
+                <button class="button is-danger" id="confirmDelete">Yes</button>
+                <button class="button" id="cancelDelete">No</button>
+            </footer>
+        </div>
+    </div>
+
     <script>
         document.getElementById('selectAll').addEventListener('change', function () {
             var checkboxes = document.querySelectorAll('.fileCheckbox');
@@ -196,9 +222,22 @@
             document.getElementById('deleteForm').submit();
         });
 
-        document.getElementById('deleteForm').addEventListener('submit', function () {
-            // Update the current path before submitting the delete form
-            document.getElementById('currentPath').value = localStorage.getItem('selectedFolder') || '.';
+        document.getElementById('deleteButton').addEventListener('click', function () {
+            document.getElementById('deleteModal').classList.add('is-active');
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', function () {
+            document.getElementById('deleteForm').submit();
+        });
+
+        document.getElementById('cancelDelete').addEventListener('click', function () {
+            document.getElementById('deleteModal').classList.remove('is-active');
+        });
+
+        document.querySelectorAll('.modal-background, .delete').forEach(function (element) {
+            element.addEventListener('click', function () {
+                document.getElementById('deleteModal').classList.remove('is-active');
+            });
         });
     </script>
 </body>
