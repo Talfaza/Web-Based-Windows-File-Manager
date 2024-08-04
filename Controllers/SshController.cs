@@ -72,6 +72,48 @@ namespace WebBasedFileManager.Controllers
             return View("Index", _currentModel);
         }
 
+        [HttpPost]
+        public IActionResult CompressModal(List<string> items)
+        {
+            ViewBag.ItemsToCompress = items;
+            return PartialView("_CompressModal");
+        }
+
+        [HttpPost]
+        public IActionResult Compress(List<string> items, string archiveName)
+        {
+            var path = Request.Form["currentPath"];
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
+                        var archivePath = $"{fullPath}{archiveName}.rar";
+                        var itemsPath = string.Join(" ", items.ConvertAll(item => $"\"{item}\""));
+                        var cmd = client.RunCommand($"tar -cf \"{archivePath}\" {itemsPath}");
+                        cmd.Execute();
+                        client.Disconnect();
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                }
+            }
+
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
+
         private List<string> GetFilesAndDirectories(string path)
         {
             var files = new List<string>();

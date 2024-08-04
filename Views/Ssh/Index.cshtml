@@ -101,7 +101,7 @@
                                 <table class="table is-fullwidth is-bordered">
                                     <thead>
                                         <tr>
-                                            <th><input type="checkbox" id="selectAll"></th>
+                                            <th><input type="checkbox" id="selectAll" /></th>
                                             <th>File Name</th>
                                         </tr>
                                     </thead>
@@ -169,6 +169,36 @@
         </div>
     </div>
 
+    <!-- Compress Modal -->
+    <div class="modal" id="compressModal">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+            <header class="modal-card-head">
+                <p class="modal-card-title">Compress Files</p>
+                <button class="delete" aria-label="close"></button>
+            </header>
+            <section class="modal-card-body">
+                <form asp-action="Compress" method="post">
+                    <input type="hidden" name="currentPath" id="modalCurrentPath" value="@ViewBag.CurrentPath" />
+                    <input type="hidden" name="items" id="modalItems" />
+                    <div class="field">
+                        <label class="label">Archive Name</label>
+                        <div class="control">
+                            <input type="text" name="archiveName" class="input" placeholder="Enter archive name" required />
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="control">
+                            <button type="submit" class="button is-warning">Compress</button>
+                            <button type="button" class="button" id="cancelCompress">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
     <div class="modal" id="deleteModal">
         <div class="modal-background"></div>
         <div class="modal-card">
@@ -228,6 +258,8 @@
         });
 
         document.getElementById('deleteButton').addEventListener('click', function () {
+            var selectedItems = Array.from(document.querySelectorAll('.fileCheckbox:checked')).map(checkbox => checkbox.value).join(',');
+            document.getElementById('modalItems').value = selectedItems;
             document.getElementById('deleteModal').classList.add('is-active');
         });
 
@@ -243,6 +275,16 @@
             element.addEventListener('click', function () {
                 document.getElementById('deleteModal').classList.remove('is-active');
             });
+        });
+
+        document.getElementById('compressButton').addEventListener('click', function () {
+            var selectedItems = Array.from(document.querySelectorAll('.fileCheckbox:checked')).map(checkbox => checkbox.value).join(',');
+            document.getElementById('modalItems').value = selectedItems;
+            document.getElementById('compressModal').classList.add('is-active');
+        });
+
+        document.getElementById('cancelCompress').addEventListener('click', function () {
+            document.getElementById('compressModal').classList.remove('is-active');
         });
     </script>
 </body>
