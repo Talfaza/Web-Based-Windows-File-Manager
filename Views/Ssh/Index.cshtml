@@ -222,6 +222,8 @@
         </div>
     </div>
 
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectAllCheckbox = document.getElementById('selectAll');
@@ -242,11 +244,10 @@
                 });
             });
 
-            // Compress functionality
             compressButton.addEventListener('click', () => {
                 const selectedFiles = Array.from(fileCheckboxes)
                     .filter(checkbox => checkbox.checked)
-                    .map(checkbox => checkbox.value);
+                    .map(checkbox => `${checkbox.value}`); 
 
                 if (selectedFiles.length === 0) {
                     alert('Please select at least one file to compress.');
@@ -254,7 +255,7 @@
                 }
 
                 const modalItems = document.getElementById('modalItems');
-                modalItems.value = selectedFiles.join(',');
+                modalItems.value = selectedFiles.join('" "'); // Join with a space and "" eg:  tar -cf "i1" "i2" "i3"
 
                 compressModal.classList.add('is-active');
             });
@@ -309,5 +310,7 @@
             });
         });
     </script>
+
+
 </body>
 </html>

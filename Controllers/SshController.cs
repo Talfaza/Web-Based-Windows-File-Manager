@@ -72,16 +72,16 @@
                 return View("Index", _currentModel);
             }
 
-            [HttpPost]
-            public IActionResult CompressModal(List<string> items)
-            {
-                ViewBag.ItemsToCompress = items;
-                return PartialView("_CompressModal");
-            }
+        [HttpPost]
+        public IActionResult CompressModal(List<string> items)
+        {
+            ViewBag.ItemsToCompress = items;
+            return PartialView("_CompressModal");
+        }
         [HttpPost]
         public IActionResult Compress(List<string> items, string archiveName)
         {
-            var path = Request.Form["currentPath"];
+            var path = (string)Request.Form["currentPath"];
             using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
             {
                 try
@@ -90,18 +90,28 @@
                     if (client.IsConnected)
                     {
                         var itemsString = string.Join(" ", items.Select(item => $"\"{item}\""));
-                        var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
+                        var fullPath = string.IsNullOrEmpty(path) ? "." : path;
                         var archivePath = $"{archiveName}.rar";
 
-                        var cmdText = $"cd \"{fullPath}\" && tar -cf \"{archivePath}\" {itemsString} && cd %HOMEPATH%";
+                        if (fullPath.EndsWith("\\"))
+                        {
+                            fullPath = fullPath.TrimEnd('\\');
+                        }
+
+                        var cmdText = $"cd \"{fullPath}\" && tar -cf \"{archivePath}\" {itemsString}";
+
+                        //  debugging information 
+                        ViewBag.Command = cmdText;
+                        ViewBag.ItemsString = itemsString;
+                        ViewBag.FullPath = fullPath;
+
                         var cmd = client.RunCommand(cmdText);
                         cmd.Execute();
 
-                       
-                        if (!string.IsNullOrEmpty(cmd.Error))
-                        {
-                            ViewBag.Message = $"Command error: {cmd.Error}";
-                        }
+                        ViewBag.CommandResult = cmd.Result;
+                        ViewBag.CommandError = cmd.Error;
+
+                  
 
                         client.Disconnect();
                     }
@@ -121,6 +131,7 @@
             ViewBag.CurrentPath = path;
             return View("Index", _currentModel);
         }
+
 
 
         private List<string> GetFilesAndDirectories(string path)
