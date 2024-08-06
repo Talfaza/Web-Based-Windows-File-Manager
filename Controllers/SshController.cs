@@ -1,84 +1,83 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Renci.SshNet;
-using System;
-using System.Collections.Generic;
-using WebBasedFileManager.Models;
+﻿    using Microsoft.AspNetCore.Mvc;
+    using Renci.SshNet;
+    using System;
+    using System.Collections.Generic;
+    using WebBasedFileManager.Models;
 
-namespace WebBasedFileManager.Controllers
-{
-    public class SshController : Controller
+    namespace WebBasedFileManager.Controllers
     {
-        private static SshConnectionModel _currentModel;
-
-        [HttpGet]
-        public IActionResult Index()
+        public class SshController : Controller
         {
-            return View();
-        }
+            private static SshConnectionModel _currentModel;
 
-        [HttpPost]
-        public IActionResult Connect(SshConnectionModel model)
-        {
-            _currentModel = model;
-            var files = GetFilesAndDirectories("");
-
-            ViewBag.Files = files;
-            ViewBag.CurrentPath = "";
-            return View("Index", model);
-        }
-
-        [HttpPost]
-        public IActionResult Navigate(string path)
-        {
-            var files = GetFilesAndDirectories(path);
-            ViewBag.Files = files;
-            ViewBag.CurrentPath = path;
-            return View("Index", _currentModel);
-        }
-
-        [HttpPost]
-        public IActionResult Delete(List<string> items)
-        {
-            var path = Request.Form["currentPath"];
-            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            [HttpGet]
+            public IActionResult Index()
             {
-                try
-                {
-                    client.Connect();
-                    if (client.IsConnected)
-                    {
-                        foreach (var item in items)
-                        {
-                            var fullPath = string.IsNullOrEmpty(path) ? item : $"{path}\\{item}";
-                            var cmd = client.RunCommand($"del /q \"{fullPath}\" & rmdir /q /s \"{fullPath}\"");
-                            cmd.Execute();
-                        }
-                        client.Disconnect();
-                    }
-                    else
-                    {
-                        ViewBag.Message = "Failed to connect to the server.";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ViewBag.Message = $"Error: {ex.Message}";
-                }
+                return View();
             }
 
-            var files = GetFilesAndDirectories(path);
-            ViewBag.Files = files;
-            ViewBag.CurrentPath = path;
-            return View("Index", _currentModel);
-        }
+            [HttpPost]
+            public IActionResult Connect(SshConnectionModel model)
+            {
+                _currentModel = model;
+                var files = GetFilesAndDirectories("");
 
-        [HttpPost]
-        public IActionResult CompressModal(List<string> items)
-        {
-            ViewBag.ItemsToCompress = items;
-            return PartialView("_CompressModal");
-        }
+                ViewBag.Files = files;
+                ViewBag.CurrentPath = "";
+                return View("Index", model);
+            }
 
+            [HttpPost]
+            public IActionResult Navigate(string path)
+            {
+                var files = GetFilesAndDirectories(path);
+                ViewBag.Files = files;
+                ViewBag.CurrentPath = path;
+                return View("Index", _currentModel);
+            }
+
+            [HttpPost]
+            public IActionResult Delete(List<string> items)
+            {
+                var path = Request.Form["currentPath"];
+                using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+                {
+                    try
+                    {
+                        client.Connect();
+                        if (client.IsConnected)
+                        {
+                            foreach (var item in items)
+                            {
+                                var fullPath = string.IsNullOrEmpty(path) ? item : $"{path}\\{item}";
+                                var cmd = client.RunCommand($"del /q \"{fullPath}\" & rmdir /q /s \"{fullPath}\"");
+                                cmd.Execute();
+                            }
+                            client.Disconnect();
+                        }
+                        else
+                        {
+                            ViewBag.Message = "Failed to connect to the server.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ViewBag.Message = $"Error: {ex.Message}";
+                    }
+                }
+
+                var files = GetFilesAndDirectories(path);
+                ViewBag.Files = files;
+                ViewBag.CurrentPath = path;
+                return View("Index", _currentModel);
+            }
+
+            [HttpPost]
+            public IActionResult CompressModal(List<string> items)
+            {
+                ViewBag.ItemsToCompress = items;
+                return PartialView("_CompressModal");
+            }
         [HttpPost]
         public IActionResult Compress(List<string> items, string archiveName)
         {
@@ -90,11 +89,20 @@ namespace WebBasedFileManager.Controllers
                     client.Connect();
                     if (client.IsConnected)
                     {
+                        var itemsString = string.Join(" ", items.Select(item => $"\"{item}\""));
                         var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
-                        var archivePath = $"{fullPath}{archiveName}.rar";
-                        var itemsPath = string.Join(" ", items.ConvertAll(item => $"\"{item}\""));
-                        var cmd = client.RunCommand($"tar -cf \"{archivePath}\" {itemsPath}");
+                        var archivePath = $"{archiveName}.rar";
+
+                        var cmdText = $"cd \"{fullPath}\" && tar -cf \"{archivePath}\" {itemsString} && cd %HOMEPATH%";
+                        var cmd = client.RunCommand(cmdText);
                         cmd.Execute();
+
+                       
+                        if (!string.IsNullOrEmpty(cmd.Error))
+                        {
+                            ViewBag.Message = $"Command error: {cmd.Error}";
+                        }
+
                         client.Disconnect();
                     }
                     else
@@ -114,34 +122,35 @@ namespace WebBasedFileManager.Controllers
             return View("Index", _currentModel);
         }
 
+
         private List<string> GetFilesAndDirectories(string path)
-        {
-            var files = new List<string>();
-            var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
-
-            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
             {
-                try
-                {
-                    client.Connect();
-                    if (client.IsConnected)
-                    {
-                        var cmd = client.RunCommand($"dir /b \"{fullPath}\"");
-                        files.AddRange(cmd.Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
-                        client.Disconnect();
-                    }
-                    else
-                    {
-                        ViewBag.Message = "Failed to connect to the server.";
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ViewBag.Message = $"Error: {ex.Message}";
-                }
-            }
+                var files = new List<string>();
+                var fullPath = string.IsNullOrEmpty(path) ? "" : path + "\\";
 
-            return files;
+                using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+                {
+                    try
+                    {
+                        client.Connect();
+                        if (client.IsConnected)
+                        {
+                            var cmd = client.RunCommand($"dir /b \"{fullPath}\"");
+                            files.AddRange(cmd.Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None));
+                            client.Disconnect();
+                        }
+                        else
+                        {
+                            ViewBag.Message = "Failed to connect to the server.";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ViewBag.Message = $"Error: {ex.Message}";
+                    }
+                }
+
+                return files;
+            }
         }
     }
-}

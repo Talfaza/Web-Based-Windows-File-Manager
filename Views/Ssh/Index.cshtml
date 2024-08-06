@@ -197,6 +197,12 @@
             </section>
         </div>
     </div>
+    <!-- Decompress Form -->
+    <form asp-action="Decompress" method="post" id="decompressForm" style="display: none;">
+        <input type="hidden" name="currentPath" id="hiddenDecompressCurrentPath" />
+        <input type="hidden" name="items" id="hiddenDecompressItems" />
+        <input type="hidden" name="archiveName" id="hiddenDecompressArchiveName" />
+    </form>
 
     <!-- Delete Modal -->
     <div class="modal" id="deleteModal">
@@ -210,81 +216,97 @@
                 <p>Are you sure you want to delete the selected files?</p>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-danger" id="confirmDelete">Yes</button>
-                <button class="button" id="cancelDelete">No</button>
+                <button id="confirmDelete" class="button is-danger">Delete</button>
+                <button class="button" id="cancelDelete">Cancel</button>
             </footer>
         </div>
     </div>
 
     <script>
-        document.getElementById('selectAll').addEventListener('change', function () {
-            var checkboxes = document.querySelectorAll('.fileCheckbox:not(.hide-first-row .fileCheckbox)');
-            checkboxes.forEach(function (checkbox) {
-                checkbox.checked = this.checked;
-            }, this);
-        });
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const fileCheckboxes = document.querySelectorAll('.fileCheckbox');
+            const compressButton = document.getElementById('compressButton');
+            const compressModal = document.getElementById('compressModal');
+            const cancelCompress = document.getElementById('cancelCompress');
+            const deleteButton = document.getElementById('deleteButton');
+            const deleteModal = document.getElementById('deleteModal');
+            const cancelDelete = document.getElementById('cancelDelete');
+            const confirmDelete = document.getElementById('confirmDelete');
+            const navigateUp = document.getElementById('navigateUp');
 
-        document.querySelectorAll('.folder-button').forEach(function (button) {
-            button.addEventListener('click', function (event) {
-                // Prevent form submission for logging purpose
-                event.preventDefault();
-                var folderName = this.getAttribute('data-folder-name');
+            // Select All functionality
+            selectAllCheckbox.addEventListener('change', () => {
+                fileCheckboxes.forEach(checkbox => {
+                    checkbox.checked = selectAllCheckbox.checked;
+                });
+            });
 
-                // Get the current path from localStorage or default to '.'
-                var currentPath = localStorage.getItem('selectedFolder') || '.';
+            // Compress functionality
+            compressButton.addEventListener('click', () => {
+                const selectedFiles = Array.from(fileCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
 
-                if (folderName === '') {
-                    // If folderName is empty, reset path to '.'
-                    localStorage.setItem('selectedFolder', '.');
-                    this.closest('form').submit();
-                } else {
-                    // Update path
-                    var newPath = currentPath === '.' ? `./${folderName}` : `${currentPath}/${folderName}`;
-                    console.log("Folder Path:", newPath);
-
-                    localStorage.setItem('selectedFolder', newPath);
-
-                    this.closest('form').submit();
+                if (selectedFiles.length === 0) {
+                    alert('Please select at least one file to compress.');
+                    return;
                 }
+
+                const modalItems = document.getElementById('modalItems');
+                modalItems.value = selectedFiles.join(',');
+
+                compressModal.classList.add('is-active');
             });
-        });
 
-        document.getElementById('navigateUp').addEventListener('click', function () {
-            var currentPath = localStorage.getItem('selectedFolder') || '.';
-            var newPath = currentPath.split('/').slice(0, -1).join('/') || '.';
-            localStorage.setItem('selectedFolder', newPath);
-            document.getElementById('currentPath').value = newPath;
-            document.getElementById('deleteForm').submit();
-        });
-
-        document.getElementById('deleteButton').addEventListener('click', function () {
-            var selectedItems = Array.from(document.querySelectorAll('.fileCheckbox:checked')).map(checkbox => checkbox.value).join(',');
-            document.getElementById('modalItems').value = selectedItems;
-            document.getElementById('deleteModal').classList.add('is-active');
-        });
-
-        document.getElementById('confirmDelete').addEventListener('click', function () {
-            document.getElementById('deleteForm').submit();
-        });
-
-        document.getElementById('cancelDelete').addEventListener('click', function () {
-            document.getElementById('deleteModal').classList.remove('is-active');
-        });
-
-        document.querySelectorAll('.modal-background, .delete').forEach(function (element) {
-            element.addEventListener('click', function () {
-                document.getElementById('deleteModal').classList.remove('is-active');
+            cancelCompress.addEventListener('click', () => {
+                compressModal.classList.remove('is-active');
             });
-        });
 
-        document.getElementById('compressButton').addEventListener('click', function () {
-            var selectedItems = Array.from(document.querySelectorAll('.fileCheckbox:checked')).map(checkbox => checkbox.value).join(',');
-            document.getElementById('modalItems').value = selectedItems;
-            document.getElementById('compressModal').classList.add('is-active');
-        });
+            // Delete functionality
+            deleteButton.addEventListener('click', () => {
+                const selectedFiles = Array.from(fileCheckboxes)
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
 
-        document.getElementById('cancelCompress').addEventListener('click', function () {
-            document.getElementById('compressModal').classList.remove('is-active');
+                if (selectedFiles.length === 0) {
+                    alert('Please select at least one file to delete.');
+                    return;
+                }
+
+                deleteModal.classList.add('is-active');
+            });
+
+            cancelDelete.addEventListener('click', () => {
+                deleteModal.classList.remove('is-active');
+            });
+
+            confirmDelete.addEventListener('click', () => {
+                deleteModal.classList.remove('is-active');
+                document.getElementById('deleteForm').submit();
+            });
+
+            // Navigate Up functionality
+            navigateUp.addEventListener('click', () => {
+                const currentPath = document.getElementById('currentPath').value;
+                const pathParts = currentPath.split('/');
+                pathParts.pop();
+                const newPath = pathParts.join('/');
+
+                const navigateForm = document.createElement('form');
+                navigateForm.method = 'post';
+                navigateForm.action = '@Url.Action("Navigate")';
+
+                const pathInput = document.createElement('input');
+                pathInput.type = 'hidden';
+                pathInput.name = 'path';
+                pathInput.value = newPath;
+
+                navigateForm.appendChild(pathInput);
+                document.body.appendChild(navigateForm);
+
+                navigateForm.submit();
+            });
         });
     </script>
 </body>
