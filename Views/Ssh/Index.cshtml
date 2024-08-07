@@ -88,7 +88,6 @@
                         {
                             <form asp-action="Delete" method="post" id="deleteForm">
                                 <input type="hidden" name="currentPath" id="currentPath" value="@ViewBag.CurrentPath" />
-
                                 <div class="buttons-container">
                                     <button type="button" id="navigateUp" class="button is-primary is-outlined"><i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up</button>
                                     <button class="button is-link is-outlined"> <i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
@@ -197,13 +196,6 @@
             </section>
         </div>
     </div>
-    <!-- Decompress Form -->
-    <form asp-action="Decompress" method="post" id="decompressForm" style="display: none;">
-        <input type="hidden" name="currentPath" id="hiddenDecompressCurrentPath" />
-        <input type="hidden" name="items" id="hiddenDecompressItems" />
-        <input type="hidden" name="archiveName" id="hiddenDecompressArchiveName" />
-    </form>
-
     <!-- Delete Modal -->
     <div class="modal" id="deleteModal">
         <div class="modal-background"></div>
@@ -221,9 +213,6 @@
             </footer>
         </div>
     </div>
-
-
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const selectAllCheckbox = document.getElementById('selectAll');
@@ -244,10 +233,11 @@
                 });
             });
 
+            // Compress functionality
             compressButton.addEventListener('click', () => {
                 const selectedFiles = Array.from(fileCheckboxes)
                     .filter(checkbox => checkbox.checked)
-                    .map(checkbox => `${checkbox.value}`); 
+                    .map(checkbox => `${checkbox.value}`);
 
                 if (selectedFiles.length === 0) {
                     alert('Please select at least one file to compress.');
@@ -289,24 +279,31 @@
 
             // Navigate Up functionality
             navigateUp.addEventListener('click', () => {
-                const currentPath = document.getElementById('currentPath').value;
-                const pathParts = currentPath.split('/');
-                pathParts.pop();
-                const newPath = pathParts.join('/');
+                var currentPath = localStorage.getItem('selectedFolder') || '.';
+                var newPath = currentPath.split('/').slice(0, -1).join('/') || '.';
+                localStorage.setItem('selectedFolder', newPath);
+                document.getElementById('currentPath').value = newPath;
+                document.getElementById('deleteForm').submit();
+            });
 
-                const navigateForm = document.createElement('form');
-                navigateForm.method = 'post';
-                navigateForm.action = '@Url.Action("Navigate")';
+            // Folder navigation
+            document.querySelectorAll('.folder-button').forEach(function (button) {
+                button.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    var folderName = this.getAttribute('data-folder-name');
 
-                const pathInput = document.createElement('input');
-                pathInput.type = 'hidden';
-                pathInput.name = 'path';
-                pathInput.value = newPath;
+                    var currentPath = localStorage.getItem('selectedFolder') || '.';
+                    if (folderName === '') {
+                        localStorage.setItem('selectedFolder', '.');
+                        this.closest('form').submit();
+                    } else {
+                        var newPath = currentPath === '.' ? `./${folderName}` : `${currentPath}/${folderName}`;
+                        console.log("Folder Path:", newPath);
 
-                navigateForm.appendChild(pathInput);
-                document.body.appendChild(navigateForm);
-
-                navigateForm.submit();
+                        localStorage.setItem('selectedFolder', newPath);
+                        this.closest('form').submit();
+                    }
+                });
             });
         });
     </script>

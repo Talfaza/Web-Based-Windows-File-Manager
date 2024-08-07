@@ -27,16 +27,16 @@
                 return View("Index", model);
             }
 
-            [HttpPost]
-            public IActionResult Navigate(string path)
-            {
-                var files = GetFilesAndDirectories(path);
-                ViewBag.Files = files;
-                ViewBag.CurrentPath = path;
-                return View("Index", _currentModel);
-            }
+        [HttpPost]
+        public IActionResult Navigate(string path)
+        {
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
 
-            [HttpPost]
+        [HttpPost]
             public IActionResult Delete(List<string> items)
             {
                 var path = Request.Form["currentPath"];
@@ -126,13 +126,58 @@
                 }
             }
 
+
             var files = GetFilesAndDirectories(path);
             ViewBag.Files = files;
             ViewBag.CurrentPath = path;
             return View("Index", _currentModel);
         }
+        [HttpPost]
+        public IActionResult Decompress(List<string> items)
+        {
+            var path = (string)Request.Form["currentPath"];
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        var pathDir = string.IsNullOrEmpty(path) ? "." : path;
+                        var fullPath = string.IsNullOrEmpty(path) ? "." : pathDir;
 
+                        // Join all the items to be extracted
+                        var itemsString = string.Join(" ", items.Select(item => $"\"{item}\""));
 
+                        // Create the command to change directory and extract all items
+                        var cmdText = $"cd \"{fullPath}\"  &&tar -xf {itemsString}";
+
+                        var cmd = client.RunCommand(cmdText);
+                        cmd.Execute();
+
+                        // Debugging information
+                        ViewBag.Command = cmdText;
+                        ViewBag.CommandResult = cmd.Result;
+                        ViewBag.CommandError = cmd.Error;
+
+                        client.Disconnect();
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                }
+            }
+
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
 
         private List<string> GetFilesAndDirectories(string path)
             {
