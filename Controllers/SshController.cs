@@ -27,7 +27,7 @@
                 return View("Index", model);
             }
 
-        [HttpPost]
+               [HttpPost]
         public IActionResult Navigate(string path)
         {
             var files = GetFilesAndDirectories(path);
@@ -36,7 +36,7 @@
             return View("Index", _currentModel);
         }
 
-        [HttpPost]
+            [HttpPost]
             public IActionResult Delete(List<string> items)
             {
                 var path = Request.Form["currentPath"];
@@ -99,6 +99,7 @@
                         }
 
                         var cmdText = $"cd \"{fullPath}\" && tar -cf \"{archivePath}\" {itemsString}";
+                        var cmdDel = $"cd \"{fullPath}\"  && del \"{itemsString}\"";
 
                         //  debugging information 
                         ViewBag.Command = cmdText;
@@ -106,7 +107,9 @@
                         ViewBag.FullPath = fullPath;
 
                         var cmd = client.RunCommand(cmdText);
+                        var del = client.RunCommand(cmdDel);
                         cmd.Execute();
+                        del.Execute();
 
                         ViewBag.CommandResult = cmd.Result;
                         ViewBag.CommandError = cmd.Error;
