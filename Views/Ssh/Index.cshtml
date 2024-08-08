@@ -40,14 +40,21 @@
                         <i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up
                     </button>
                 </form>
+
                 <button class="button is-link is-outlined"><i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
-                <button class="button is-info is-outlined"><i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File</button>
+                <!-- Move Button -->
+
+                <button type="button" id="moveButton" class="button is-info is-outlined">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File
+                </button>
+
+                <!-- Compress Button -->
 
                 <button type="button" id="compressButton" class="button is-warning is-outlined">
                     <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress
                 </button>
 
-                <!-- Decompress Button -->
+                <!-- Decompress Button --> 
                 <button type="button" id="decompressButton" class="button is-primary is-outlined">
                     <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress
                 </button>
@@ -111,7 +118,36 @@
                     </footer>
                 </div>
             </div>
+            <!-- Move Modal -->
+            <div class="modal" id="moveModal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Move Files</p>
+                        <button class="delete" aria-label="close" id="closeMoveModal"></button>
+                    </header>
+                    <section class="modal-card-body">
+                        <div class="field">
+                            <label class="label">Destination Path</label>
+                            <div class="control">
+                                <input class="input" type="text" id="destinationPathInput" placeholder="Enter destination path">
+                            </div>
+                        </div>
+                    </section>
+                    <footer class="modal-card-foot">
+                        <form asp-action="Move" method="post" id="moveForm">
+                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                            <input type="hidden" name="destinationPath" id="destinationPath" />
+                            <div id="moveSelectedItems"></div>
+                            <button type="submit" id="confirmMove" class="button is-info">Move</button>
+                        </form>
+                        <button class="button" id="cancelMove">Cancel</button>
+                    </footer>
+                </div>
+            </div>
 
+
+         
             <h2 class="subtitle">Position : @ViewBag.CurrentPath</h2>
             <table class="table is-fullwidth is-striped">
                 <thead>
@@ -288,6 +324,52 @@
         } else {
             alert('No items selected.');
         }
+    });
+
+
+    // Handle the "Move" button click event
+    document.getElementById('moveButton').addEventListener('click', function () {
+        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+        if (selectedItems.length > 0) {
+            document.getElementById('moveModal').classList.add('is-active');
+        } else {
+            alert('No items selected.');
+        }
+    });
+
+    // Handle closing the move modal
+    document.getElementById('closeMoveModal').addEventListener('click', function () {
+        document.getElementById('moveModal').classList.remove('is-active');
+    });
+
+    // Handle cancel move action
+    document.getElementById('cancelMove').addEventListener('click', function () {
+        document.getElementById('moveModal').classList.remove('is-active');
+    });
+
+    // Handle confirm move action
+    document.getElementById('confirmMove').addEventListener('click', function () {
+        const destinationPath = document.getElementById('destinationPathInput').value;
+        document.getElementById('destinationPath').value = destinationPath;
+
+        const form = document.getElementById('moveForm');
+        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+        // Clear existing hidden inputs
+        const existingItems = form.querySelectorAll('input[name="items"]');
+        existingItems.forEach(input => input.remove());
+
+        // Add hidden inputs for each selected item
+        selectedItems.forEach(item => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'items';
+            input.value = item;
+            document.getElementById('moveSelectedItems').appendChild(input);
+        });
+
+        form.submit();
     });
 
 </script>

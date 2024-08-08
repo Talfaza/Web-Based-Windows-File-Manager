@@ -5,19 +5,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using WebBasedFileManager.Models;
-
+using Microsoft.Extensions.Logging;
 namespace WebBasedFileManager.Controllers
 {
     public class SshController : Controller
     {
         private static SshConnectionModel _currentModel;
-
+        private readonly ILogger<SshController> _logger;
         [HttpGet]
         public IActionResult Index()
         {
             return View();
         }
-
+        public SshController(ILogger<SshController> logger)
+        {
+            _logger = logger;
+        }
         [HttpPost]
         public IActionResult Connect(SshConnectionModel model)
         {
@@ -231,6 +234,70 @@ namespace WebBasedFileManager.Controllers
             ViewBag.CurrentPath = currentPath;
             return View("Index", _currentModel);
         }
+
+
+        [HttpPost]
+        public IActionResult Move(List<string> items, string currentPath, string destinationPath)
+        {
+            currentPath = currentPath ?? string.Empty;
+
+            ViewBag.DebugInfo = new List<string>
+    {
+        $"Current Path: {currentPath}",
+        $"Destination Path: {destinationPath}",
+        $"Files to Move: {string.Join(", ", items)}"
+    };
+
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+
+                        foreach (var item in items)
+                        {
+                            var sourceFilePath = System.IO.Path.Combine(currentPath, item);
+                            var destinationFilePath = System.IO.Path.Combine(destinationPath);
+
+                            var cmdCommand = $"move /y \"{sourceFilePath}\" \"{destinationFilePath}\"";
+
+                            var cmd = client.RunCommand(cmdCommand);
+                             cmd.Execute();
+                            if (!string.IsNullOrEmpty(cmd.Error))
+                            {
+                                ViewBag.Message = "An error occurred during moving.";
+                            }
+                            else
+                            {
+                                ViewBag.Message = $"Successfully decompressed {item}.";
+                            }
+
+                           
+                        }
+                        client.Disconnect();
+                     
+                    }  
+              
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                }
+            }
+
+            var files = GetFilesAndDirectories(currentPath);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = currentPath;
+            return View("Index", _currentModel);
+        }
+
+
 
         private List<string> GetFilesAndDirectories(string path)
         {
