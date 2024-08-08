@@ -3,311 +3,163 @@
     ViewData["Title"] = "File Manager";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <title>SSH Connection</title>
-    <style>
-        button.is-link {
-            background-color: white;
-        }
+<div class="section">
+    <div class="container">
+        <h1 class="title has-text-centered">File Manager</h1>
 
-            button.is-link.is-text {
-                background-color: transparent;
-                color: white;
-                border: none;
-            }
+        <form asp-action="Connect" method="post">
+            <div class="field is-grouped is-grouped-centered">
+                <div class="control">
+                    <label asp-for="Ip" class="label">IP Address</label>
+                    <input asp-for="Ip" class="input" style="width: 300px;" />
+                </div>
+                <div class="control">
+                    <label asp-for="Username" class="label">Username</label>
+                    <input asp-for="Username" class="input" style="width: 300px;" />
+                </div>
+                <div class="control">
+                    <label asp-for="Password" class="label">Password</label>
+                    <input asp-for="Password" type="password" class="input" style="width: 300px;" />
+                </div>
+            </div>
+            <br />
+            <div class="field is-grouped is-grouped-centered">
+                <div class="control">
+                    <input type="submit" value="Connect" class="button" />
+                </div>
+            </div>
+        </form>
 
-        .buttons-container {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-
-            .buttons-container .button {
-                margin: 0.5rem;
-            }
-
-        /* Hide the first row */
-        .hide-first-row {
-            display: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="section-container">
-        <div class="section-content">
-            <section class="section">
-                <center>
-                    <h1 class="title is-1" id="sshText">File Manager</h1>
-                    <form asp-action="Connect" method="post">
-                        <div class="columns is-desktop is-multiline">
-                            <div class="column is-4">
-                                <div class="field">
-                                    <label class="label" asp-for="Ip"></label>
-                                    <div class="control">
-                                        <input asp-for="Ip" class="input" type="text" placeholder="IP Address" />
-                                    </div>
-                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Ip)</p>
-                                </div>
-                            </div>
-                            <div class="column is-4">
-                                <div class="field">
-                                    <label class="label" asp-for="Username"></label>
-                                    <div class="control">
-                                        <input asp-for="Username" class="input" type="text" placeholder="Username" />
-                                    </div>
-                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Username)</p>
-                                </div>
-                            </div>
-                            <div class="column is-4">
-                                <div class="field">
-                                    <label class="label" asp-for="Password"></label>
-                                    <div class="control">
-                                        <input asp-for="Password" type="password" class="input" placeholder="Password" />
-                                    </div>
-                                    <p class="help is-danger">@Html.ValidationMessageFor(model => model.Password)</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="field">
-                            <div class="control">
-                                <button type="submit" class="button">Connect</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    @if (ViewBag.Files != null)
-                    {
-                        var files = ViewBag.Files as List<string>;
-                        if (files != null && files.Count > 0)
-                        {
-                            <form asp-action="Delete" method="post" id="deleteForm">
-                                <input type="hidden" name="currentPath" id="currentPath" value="@ViewBag.CurrentPath" />
-                                <div class="buttons-container">
-                                    <button type="button" id="navigateUp" class="button is-primary is-outlined"><i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up</button>
-                                    <button class="button is-link is-outlined"> <i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
-                                    <button class="button is-info is-outlined"> <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File</button>
-                                    <button type="button" id="compressButton" class="button is-warning is-outlined"> <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress</button>
-                                    <button class="button is-success is-outlined"> <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress</button>
-                                    <button type="button" id="deleteButton" class="button is-danger is-outlined"> <i class="fa-solid fa-trash-can"></i> &nbsp;Delete</button>
-                                </div>
-
-                                <table class="table is-fullwidth is-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th><input type="checkbox" id="selectAll" /></th>
-                                            <th>File Name</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @{
-                                            // Safely cast and handle files
-                                            var lastFile = files.Last();
-                                            var remainingFiles = files.Take(files.Count - 1);
-
-                                            <tr class="hide-first-row">
-                                                <td><input type="checkbox" class="fileCheckbox" name="items" value="@lastFile"></td>
-                                                <td>
-                                                    @if (!lastFile.Contains("."))
-                                                    {
-                                                        <form asp-action="Navigate" method="post" style="display: inline;">
-                                                            <i class="fa-regular fa-folder"></i>
-                                                            <input type="hidden" name="path" value="@lastFile" />
-                                                            <button type="submit" class="button is-link is-text folder-button" data-folder-name="@lastFile">@lastFile</button>
-                                                        </form>
-                                                    }
-                                                    else
-                                                    {
-                                                        @lastFile
-                                                    }
-                                                </td>
-                                            </tr>
-
-                                            // Display remaining files
-                                            foreach (var file in remainingFiles)
-                                            {
-                                                var isDirectory = !file.Contains(".");
-
-                                                <tr>
-                                                    <td><input type="checkbox" class="fileCheckbox" name="items" value="@file"></td>
-                                                    <td>
-                                                        @if (isDirectory)
-                                                        {
-                                                            <form asp-action="Navigate" method="post" style="display: inline;">
-                                                                <i class="fa-regular fa-folder"></i>
-                                                                <input type="hidden" name="path" value="@file" />
-                                                                <button type="submit" class="button is-link is-text folder-button" data-folder-name="@file">@file</button>
-                                                            </form>
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="fa-regular fa-file"></i>
-                                                            @file
-                                                        }
-                                                    </td>
-                                                </tr>
-                                            }
-                                        }
-                                    </tbody>
-                                </table>
-                            </form>
-                        }
-                    }
-
-                    @if (ViewBag.Message != null)
-                    {
-                        <div>@ViewBag.Message</div>
-                    }
-                </center>
-            </section>
-        </div>
-    </div>
-
-    <!-- Compress Modal -->
-    <div class="modal" id="compressModal">
-        <div class="modal-background"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Compress Files</p>
-                <button class="delete" aria-label="close"></button>
-            </header>
-            <section class="modal-card-body">
-                <form asp-action="Compress" method="post">
-                    <input type="hidden" name="currentPath" id="modalCurrentPath" value="@ViewBag.CurrentPath" />
-                    <input type="hidden" name="items" id="modalItems" />
-                    <div class="field">
-                        <label class="label">Archive Name</label>
-                        <div class="control">
-                            <input type="text" name="archiveName" class="input" placeholder="Enter archive name" required />
-                        </div>
-                    </div>
-                    <div class="field">
-                        <div class="control">
-                            <button type="submit" class="button is-warning">Compress</button>
-                            <button type="button" class="button" id="cancelCompress">Cancel</button>
-                        </div>
-                    </div>
+        @if (ViewBag.Files != null)
+        {
+            <div class="buttons-container">
+                <form asp-action="NavigateUp" method="post" style="display: inline;">
+                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                    <button type="submit" id="navigateUp" class="button is-primary is-outlined">
+                        <i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up
+                    </button>
                 </form>
-            </section>
-        </div>
-    </div>
-    <!-- Delete Modal -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-background"></div>
-        <div class="modal-card">
-            <header class="modal-card-head">
-                <p class="modal-card-title">Confirm Deletion</p>
-                <button class="delete" aria-label="close"></button>
-            </header>
-            <section class="modal-card-body">
-                <p>Are you sure you want to delete the selected files?</p>
-            </section>
-            <footer class="modal-card-foot">
-                <button id="confirmDelete" class="button is-danger">Delete</button>
-                <button class="button" id="cancelDelete">Cancel</button>
-            </footer>
-        </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const fileCheckboxes = document.querySelectorAll('.fileCheckbox');
-            const compressButton = document.getElementById('compressButton');
-            const compressModal = document.getElementById('compressModal');
-            const cancelCompress = document.getElementById('cancelCompress');
-            const deleteButton = document.getElementById('deleteButton');
-            const deleteModal = document.getElementById('deleteModal');
-            const cancelDelete = document.getElementById('cancelDelete');
-            const confirmDelete = document.getElementById('confirmDelete');
-            const navigateUp = document.getElementById('navigateUp');
-
-            // Select All functionality
-            selectAllCheckbox.addEventListener('change', () => {
-                fileCheckboxes.forEach(checkbox => {
-                    checkbox.checked = selectAllCheckbox.checked;
-                });
-            });
-
-            // Compress functionality
-            compressButton.addEventListener('click', () => {
-                const selectedFiles = Array.from(fileCheckboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => `${checkbox.value}`);
-
-                if (selectedFiles.length === 0) {
-                    alert('Please select at least one file to compress.');
-                    return;
-                }
-
-                const modalItems = document.getElementById('modalItems');
-                modalItems.value = selectedFiles.join('" "'); // Join with a space and "" eg:  tar -cf "i1" "i2" "i3"
-
-                compressModal.classList.add('is-active');
-            });
-
-            cancelCompress.addEventListener('click', () => {
-                compressModal.classList.remove('is-active');
-            });
-
-            // Delete functionality
-            deleteButton.addEventListener('click', () => {
-                const selectedFiles = Array.from(fileCheckboxes)
-                    .filter(checkbox => checkbox.checked)
-                    .map(checkbox => checkbox.value);
-
-                if (selectedFiles.length === 0) {
-                    alert('Please select at least one file to delete.');
-                    return;
-                }
-
-                deleteModal.classList.add('is-active');
-            });
-
-            cancelDelete.addEventListener('click', () => {
-                deleteModal.classList.remove('is-active');
-            });
-
-            confirmDelete.addEventListener('click', () => {
-                deleteModal.classList.remove('is-active');
-                document.getElementById('deleteForm').submit();
-            });
-
-            // Navigate Up functionality
-            navigateUp.addEventListener('click', () => {
-                var currentPath = localStorage.getItem('selectedFolder') || '.';
-                var newPath = currentPath.split('/').slice(0, -1).join('/') || '.';
-                localStorage.setItem('selectedFolder', newPath);
-                document.getElementById('currentPath').value = newPath;
-                document.getElementById('deleteForm').submit();
-            });
-
-            // Folder navigation
-            document.querySelectorAll('.folder-button').forEach(function (button) {
-                button.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    var folderName = this.getAttribute('data-folder-name');
-
-                    var currentPath = localStorage.getItem('selectedFolder') || '.';
-                    if (folderName === '') {
-                        localStorage.setItem('selectedFolder', '.');
-                        this.closest('form').submit();
-                    } else {
-                        var newPath = currentPath === '.' ? `./${folderName}` : `${currentPath}/${folderName}`;
-                        console.log("Folder Path:", newPath);
-
-                        localStorage.setItem('selectedFolder', newPath);
-                        this.closest('form').submit();
+                <button class="button is-link is-outlined"><i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
+                <button class="button is-info is-outlined"><i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File</button>
+                <button type="button" id="compressButton" class="button is-warning is-outlined"><i class="fa-solid fa-file-zipper"></i> &nbsp;Compress</button>
+                <button class="button is-success is-outlined"><i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress</button>
+                <form asp-action="Delete" method="post" id="deleteForm">
+                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                    <button type="submit" id="deleteButton" class="button is-danger is-outlined">
+                        <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                    </button>
+                </form>
+            </div>
+            <h2 class="subtitle">Position : @ViewBag.CurrentPath</h2>
+            <table class="table is-fullwidth is-striped">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" /></th>
+                        <th>File Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var file in ViewBag.Files)
+                    {
+                        <tr>
+                            <td><input type="checkbox" class="file-checkbox" value="@file" /></td>
+                            <td>
+                                @if (System.IO.Path.HasExtension(file))
+                                {
+                                    <i class="fa-regular fa-file"></i> @file
+                                }
+                                else
+                                {
+                                    <form asp-action="Navigate" method="post" style="display: inline;">
+                                        <i class="fa-regular fa-folder"></i>
+                                        <input type="hidden" name="path" value="@file" />
+                                        <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                                        <button type="submit" class="button is-text folder-link" data-folder-name="@file">@file</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
                     }
-                });
-            });
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@if (ViewBag.DebugInfo != null)
+{
+    <div class="debug-info">
+        <h3>Debug Information</h3>
+        <ul>
+            @foreach (var info in ViewBag.DebugInfo)
+            {
+                <li>@info</li>
+            }
+        </ul>
+    </div>
+}
+
+<script>
+    document.getElementById('selectAll').addEventListener('change', function (e) {
+        const checkboxes = document.querySelectorAll('.file-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
         });
-    </script>
+    });
+
+    // Delete
+    document.getElementById('deleteButton').addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const form = document.getElementById('deleteForm');
+        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+        // Clear any existing hidden inputs
+        const existingItems = form.querySelectorAll('input[name="items"]');
+        existingItems.forEach(input => input.remove());
+
+        if (selectedItems.length > 0) {
+            // Add hidden inputs for each selected item
+            selectedItems.forEach(item => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'items';
+                input.value = item;
+                form.appendChild(input);
+            });
+            form.submit();
+        } else {
+            alert('No items selected.');
+        }
+    });
+</script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+<style>
+    .folder-link {
+        color: #ffffff !important;
+        text-decoration: underline; 
+        background: none; 
+        border: none;
+        padding: 0; 
+        font-size: inherit; 
+    }
+
+        .folder-link:hover {
+            color: #ffffff !important; 
+            text-decoration: underline !important; 
+        }
 
 
-</body>
-</html>
+    .buttons-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+        .buttons-container .button {
+            margin: 0.5rem;
+        }
+</style>
