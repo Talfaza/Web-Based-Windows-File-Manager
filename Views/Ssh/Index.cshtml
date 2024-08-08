@@ -32,6 +32,7 @@
 
         @if (ViewBag.Files != null)
         {
+            <!-- Navigation Buttons -->
             <div class="buttons-container">
                 <form asp-action="NavigateUp" method="post" style="display: inline;">
                     <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
@@ -41,15 +42,76 @@
                 </form>
                 <button class="button is-link is-outlined"><i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
                 <button class="button is-info is-outlined"><i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File</button>
-                <button type="button" id="compressButton" class="button is-warning is-outlined"><i class="fa-solid fa-file-zipper"></i> &nbsp;Compress</button>
-                <button class="button is-success is-outlined"><i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress</button>
-                <form asp-action="Delete" method="post" id="deleteForm">
+
+                <button type="button" id="compressButton" class="button is-warning is-outlined">
+                    <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress
+                </button>
+
+                <!-- Decompress Button -->
+                <button type="button" id="decompressButton" class="button is-primary is-outlined">
+                    <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress
+                </button>
+
+                <form asp-action="Decompress" method="post" id="decompressForm" style="display: none;">
+                    <input type="hidden" name="archiveName" id="decompressArchiveName" />
                     <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                    <button type="submit" id="deleteButton" class="button is-danger is-outlined">
-                        <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
-                    </button>
                 </form>
+
+
+
+
+                <button type="button" id="deleteButton" class="button is-danger is-outlined">
+                    <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                </button>
+              </div>
+
+            <!-- Delete Modal -->
+            <div class="modal" id="deleteModal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Confirm Deletion</p>
+                        <button class="delete" aria-label="close" id="closeModal"></button>
+                    </header>
+                    <section class="modal-card-body">
+                        <p>Are you sure you want to delete the selected files?</p>
+                    </section>
+                    <footer class="modal-card-foot">
+                        <form asp-action="Delete" method="post" id="deleteForm">
+                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                            <button type="submit" id="confirmDelete" class="button is-danger">Delete</button>
+                        </form>
+                        <button class="button" id="cancelDelete">Cancel</button>
+                    </footer>
+                </div>
             </div>
+
+            <!-- Compress Modal -->
+            <div class="modal" id="compressModal">
+                <div class="modal-background"></div>
+                <div class="modal-card">
+                    <header class="modal-card-head">
+                        <p class="modal-card-title">Compress Files</p>
+                        <button class="delete" aria-label="close" id="closeCompressModal"></button>
+                    </header>
+                    <section class="modal-card-body">
+                        <div class="field">
+                            <label class="label">Archive Name</label>
+                            <div class="control">
+                                <input class="input" type="text" id="archiveName" placeholder="Enter archive name">
+                            </div>
+                        </div>
+                    </section>
+                    <footer class="modal-card-foot">
+                        <form asp-action="Compress" method="post" id="compressForm">
+                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                            <button type="submit" id="confirmCompress" class="button is-warning">Compress</button>
+                        </form>
+                        <button class="button" id="cancelCompress">Cancel</button>
+                    </footer>
+                </div>
+            </div>
+
             <h2 class="subtitle">Position : @ViewBag.CurrentPath</h2>
             <table class="table is-fullwidth is-striped">
                 <thead>
@@ -86,54 +148,8 @@
     </div>
 </div>
 
-@if (ViewBag.DebugInfo != null)
-{
-    <div class="debug-info">
-        <h3>Debug Information</h3>
-        <ul>
-            @foreach (var info in ViewBag.DebugInfo)
-            {
-                <li>@info</li>
-            }
-        </ul>
-    </div>
-}
 
-<script>
-    document.getElementById('selectAll').addEventListener('change', function (e) {
-        const checkboxes = document.querySelectorAll('.file-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = e.target.checked;
-        });
-    });
 
-    // Delete
-    document.getElementById('deleteButton').addEventListener('click', function (e) {
-        e.preventDefault();
-
-        const form = document.getElementById('deleteForm');
-        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
-        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
-
-        // Clear any existing hidden inputs
-        const existingItems = form.querySelectorAll('input[name="items"]');
-        existingItems.forEach(input => input.remove());
-
-        if (selectedItems.length > 0) {
-            // Add hidden inputs for each selected item
-            selectedItems.forEach(item => {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'items';
-                input.value = item;
-                form.appendChild(input);
-            });
-            form.submit();
-        } else {
-            alert('No items selected.');
-        }
-    });
-</script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
@@ -147,11 +163,10 @@
         font-size: inherit; 
     }
 
-        .folder-link:hover {
-            color: #ffffff !important; 
-            text-decoration: underline !important; 
-        }
-
+    .folder-link:hover {
+        color: #ffffff !important; 
+        text-decoration: underline !important; 
+    }
 
     .buttons-container {
         display: flex;
@@ -159,7 +174,120 @@
         margin-bottom: 1rem;
     }
 
-        .buttons-container .button {
-            margin: 0.5rem;
-        }
+    .buttons-container .button {
+        margin: 0.5rem;
+    }
 </style>
+
+
+<script>
+    // Handle "Select All" checkbox functionality
+    document.getElementById('selectAll').addEventListener('change', function (e) {
+        const checkboxes = document.querySelectorAll('.file-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = e.target.checked;
+        });
+    });
+
+    // Handle the "Delete" button click event
+    document.getElementById('deleteButton').addEventListener('click', function () {
+        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+        if (selectedItems.length > 0) {
+            document.getElementById('deleteModal').classList.add('is-active');
+        } else {
+            alert('No items selected.');
+        }
+    });
+
+    // Handle closing the delete modal
+    document.getElementById('closeModal').addEventListener('click', function () {
+        document.getElementById('deleteModal').classList.remove('is-active');
+    });
+
+    // Handle cancel delete action
+    document.getElementById('cancelDelete').addEventListener('click', function () {
+        document.getElementById('deleteModal').classList.remove('is-active');
+    });
+
+    // Handle confirm delete action
+    document.getElementById('confirmDelete').addEventListener('click', function () {
+        const form = document.getElementById('deleteForm');
+        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+        // Clear existing hidden inputs
+        const existingItems = form.querySelectorAll('input[name="items"]');
+        existingItems.forEach(input => input.remove());
+
+        // Add hidden inputs for each selected item
+        selectedItems.forEach(item => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'items';
+            input.value = item;
+            form.appendChild(input);
+        });
+    });
+
+    // Handle the "Compress" button click event
+    document.getElementById('compressButton').addEventListener('click', function () {
+        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+        if (selectedItems.length > 0) {
+            document.getElementById('compressModal').classList.add('is-active');
+        } else {
+            alert('No items selected.');
+        }
+    });
+
+    // Handle closing the compress modal
+    document.getElementById('closeCompressModal').addEventListener('click', function () {
+        document.getElementById('compressModal').classList.remove('is-active');
+    });
+
+    // Handle cancel compress action
+    document.getElementById('cancelCompress').addEventListener('click', function () {
+        document.getElementById('compressModal').classList.remove('is-active');
+    });
+
+    // Handle confirm compress action
+    document.getElementById('confirmCompress').addEventListener('click', function () {
+        const form = document.getElementById('compressForm');
+        const archiveName = document.getElementById('archiveName').value;
+        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+        // Add archive name to the form
+        const archiveInput = document.createElement('input');
+        archiveInput.type = 'hidden';
+        archiveInput.name = 'archiveName';
+        archiveInput.value = archiveName;
+        form.appendChild(archiveInput);
+
+        // Clear existing hidden inputs
+        const existingItems = form.querySelectorAll('input[name="items"]');
+        existingItems.forEach(input => input.remove());
+
+        // Add hidden inputs for each selected item
+        selectedItems.forEach(item => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'items';
+            input.value = item;
+            form.appendChild(input);
+        });
+    });
+
+    document.getElementById('decompressButton').addEventListener('click', function () {
+        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+        if (selectedItems.length === 1) {
+            const archiveName = selectedItems[0].value;
+            document.getElementById('decompressArchiveName').value = archiveName;
+            document.getElementById('decompressForm').submit();
+        } else if (selectedItems.length > 1) {
+            alert('Please select only one archive to decompress.');
+        } else {
+            alert('No items selected.');
+        }
+    });
+
+</script>

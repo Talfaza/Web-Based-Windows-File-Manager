@@ -2,6 +2,7 @@
 using Renci.SshNet;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using WebBasedFileManager.Models;
 
@@ -25,6 +26,7 @@ namespace WebBasedFileManager.Controllers
 
             ViewBag.Files = files;
             ViewBag.CurrentPath = "";
+            ViewBag.DebugInfo = new List<string> { "Connected to server.", $"Current path: {ViewBag.CurrentPath}" };
             return View("Index", model);
         }
 
@@ -40,12 +42,14 @@ namespace WebBasedFileManager.Controllers
             if (string.IsNullOrWhiteSpace(newPath))
             {
                 ViewBag.Message = "Invalid path.";
+                ViewBag.DebugInfo = new List<string> { "Navigate error: Invalid path." };
                 return View("Index", _currentModel);
             }
 
             var files = GetFilesAndDirectories(newPath);
             ViewBag.Files = files;
             ViewBag.CurrentPath = newPath;
+            ViewBag.DebugInfo = new List<string> { $"Navigated to: {newPath}" };
             return View("Index", _currentModel);
         }
 
@@ -62,13 +66,13 @@ namespace WebBasedFileManager.Controllers
             var files = GetFilesAndDirectories(parentPath);
             ViewBag.Files = files;
             ViewBag.CurrentPath = parentPath;
+            ViewBag.DebugInfo = new List<string> { $"Navigated up to: {parentPath}" };
             return View("Index", _currentModel);
         }
-        [HttpPost]
+
         [HttpPost]
         public IActionResult Delete(List<string> items, string currentPath)
         {
-            // Ensure currentPath is not null or empty
             currentPath = currentPath ?? string.Empty;
 
             using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
@@ -77,19 +81,139 @@ namespace WebBasedFileManager.Controllers
                 {
                     client.Connect();
                     if (client.IsConnected)
-   
-
+                    {
                         foreach (var item in items)
                         {
-                            // Combine path and item and escape backslashes for SSH
                             var fullPath = System.IO.Path.Combine(currentPath, item).Replace("\\", "\\\\");
-   
-                            var cmd = client.RunCommand($"del /q \"{fullPath}\" & rmdir /q /s \"{fullPath}\" ");
-                            var result = cmd.Execute();
+                            var cmdText = $"del /q \"{fullPath}\" & rmdir /q /s \"{fullPath}\"";
 
+                            // Debugging information
+                            ViewBag.DebugInfo = new List<string> { $"Executing command: {cmdText}" };
+
+                            var cmd = client.RunCommand(cmdText);
+                            cmd.Execute();
+
+                            if (!string.IsNullOrEmpty(cmd.Error))
+                            {
+                                ViewBag.Message = $"An error occurred during deletion: {cmd.Error}";
+                                ViewBag.DebugInfo.Add($"Delete error: {cmd.Error}");
+                            }
+                        }
+                        client.Disconnect();
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                    ViewBag.DebugInfo = new List<string> { $"Exception: {ex.Message}" };
+                }
+            }
+
+            var files = GetFilesAndDirectories(currentPath);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = currentPath;
+
+            return View("Index", _currentModel);
+        }
+
+        [HttpPost]
+        public IActionResult Compress(List<string> items, string archiveName)
+        {
+            var path = (string)Request.Form["currentPath"];
+
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        var itemsString = string.Join(" ", items.Select(item => $"\"{item}\""));
+                        var fullPath = string.IsNullOrEmpty(path) ? "." : path;
+                        var archivePath = $"{archiveName}.rar";
+
+                        if (fullPath.EndsWith("\\"))
+                        {
+                            fullPath = fullPath.TrimEnd('\\');
+                        }
+
+                        var cmdText = $"cd \"{fullPath}\" && tar -cf \"{archivePath}\" {itemsString}";
+
+                        // Debugging information
+                        ViewBag.DebugInfo = new List<string>
+                        {
+                            $"Compressing files: {itemsString}",
+                            $"Archive path: {archivePath}",
+                            $"Command: {cmdText}"
+                        };
+
+                        var cmd = client.RunCommand(cmdText);
+                        cmd.Execute();
+
+                        ViewBag.CommandResult = cmd.Result;
+                        ViewBag.CommandError = cmd.Error;
+
+                        if (!string.IsNullOrEmpty(cmd.Error))
+                        {
+                            ViewBag.Message = "An error occurred during compression.";
+                        }
+                        else
+                        {
+                            ViewBag.Message = $"Successfully compressed files into {archiveName}.tar";
+                        }
 
                         client.Disconnect();
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                    ViewBag.DebugInfo = new List<string> { $"Exception: {ex.Message}" };
+                }
+            }
 
+            var files = GetFilesAndDirectories(path);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = path;
+            return View("Index", _currentModel);
+        }
+        [HttpPost]
+        public IActionResult Decompress(string archiveName, string currentPath)
+        {
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        var fullPath = System.IO.Path.Combine(currentPath, archiveName).Replace("\\", "\\\\");
+                        var archiveDir = System.IO.Path.GetFileNameWithoutExtension(archiveName);
+                        var cmdText = $"cd \"{currentPath}\"  && mkdir \"{archiveDir}\" && move \"{archiveName}\" \"{archiveDir}\" && cd \"{archiveDir}\" && tar xvf \"{archiveName}\" && del /q \"{archiveName}\" ";
+             
+                      
+
+                        var cmd = client.RunCommand(cmdText);
+                        cmd.Execute();
+
+                        if (!string.IsNullOrEmpty(cmd.Error))
+                        {
+                            ViewBag.Message = "An error occurred during decompression.";
+                        }
+                        else
+                        {
+                            ViewBag.Message = $"Successfully decompressed {archiveName}.";
+                        }
+
+                        client.Disconnect();
                     }
                     else
                     {
@@ -102,15 +226,11 @@ namespace WebBasedFileManager.Controllers
                 }
             }
 
-            // Fetch updated file list
             var files = GetFilesAndDirectories(currentPath);
             ViewBag.Files = files;
             ViewBag.CurrentPath = currentPath;
-
             return View("Index", _currentModel);
         }
-
-
 
         private List<string> GetFilesAndDirectories(string path)
         {
@@ -124,7 +244,7 @@ namespace WebBasedFileManager.Controllers
                     client.Connect();
                     if (client.IsConnected)
                     {
-                        var cmd = client.RunCommand($" cmd /c dir /b \"{fullPath}\"");
+                        var cmd = client.RunCommand($"cmd /c dir /b \"{fullPath}\"");
                         files.AddRange(cmd.Result.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries));
                         client.Disconnect();
                     }
