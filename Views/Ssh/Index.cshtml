@@ -1,375 +1,483 @@
-﻿@model WebBasedFileManager.Models.SshConnectionModel
-@{
-    ViewData["Title"] = "File Manager";
-}
+﻿        @model WebBasedFileManager.Models.SshConnectionModel
+        @{
+            ViewData["Title"] = "File Manager";
+        }
 
-<div class="section">
-    <div class="container">
-        <h1 class="title has-text-centered">File Manager</h1>
+        <div class="section">
+            <div class="container">
+                <h1 class="title has-text-centered">File Manager</h1>
 
-        <form asp-action="Connect" method="post">
-            <div class="field is-grouped is-grouped-centered">
-                <div class="control">
-                    <label asp-for="Ip" class="label">IP Address</label>
-                    <input asp-for="Ip" class="input" style="width: 300px;" />
-                </div>
-                <div class="control">
-                    <label asp-for="Username" class="label">Username</label>
-                    <input asp-for="Username" class="input" style="width: 300px;" />
-                </div>
-                <div class="control">
-                    <label asp-for="Password" class="label">Password</label>
-                    <input asp-for="Password" type="password" class="input" style="width: 300px;" />
-                </div>
-            </div>
-            <br />
-            <div class="field is-grouped is-grouped-centered">
-                <div class="control">
-                    <input type="submit" value="Connect" class="button" />
-                </div>
-            </div>
-        </form>
-
-        @if (ViewBag.Files != null)
-        {
-            <!-- Navigation Buttons -->
-            <div class="buttons-container">
-                <form asp-action="NavigateUp" method="post" style="display: inline;">
-                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                    <button type="submit" id="navigateUp" class="button is-primary is-outlined">
-                        <i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up
-                    </button>
+                <form asp-action="Connect" method="post">
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <label asp-for="Ip" class="label">IP Address</label>
+                            <input asp-for="Ip" class="input" style="width: 300px;" />
+                        </div>
+                        <div class="control">
+                            <label asp-for="Username" class="label">Username</label>
+                            <input asp-for="Username" class="input" style="width: 300px;" />
+                        </div>
+                        <div class="control">
+                            <label asp-for="Password" class="label">Password</label>
+                            <input asp-for="Password" type="password" class="input" style="width: 300px;" />
+                        </div>
+                    </div>
+                    <br />
+                    <div class="field is-grouped is-grouped-centered">
+                        <div class="control">
+                            <input type="submit" value="Connect" class="button" />
+                        </div>
+                    </div>
                 </form>
 
-                <button class="button is-link is-outlined"><i class="fa-solid fa-plus"></i> &nbsp;Add File</button>
+                @if (ViewBag.Files != null)
+                {
+                    <!-- Navigation Buttons -->
+                    <div class="buttons-container">
+                        <form asp-action="NavigateUp" method="post" style="display: inline;">
+                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                            <button type="submit" id="navigateUp" class="button is-primary is-outlined">
+                                <i class="fa-solid fa-arrow-up"></i> &nbsp;Navigate Up
+                            </button>
+                        </form>
+                <!-- Upload Button -->
+                <button class="button is-link is-outlined" id="uploadButton">
+                    <i class="fa-solid fa-plus"></i> &nbsp;Add Files
+                </button>
+
+                <!-- Upload Modal -->
+                <div class="modal" id="uploadModal">
+                    <div class="modal-background"></div>
+                    <div class="modal-card">
+                        <header class="modal-card-head">
+                            <p class="modal-card-title">Upload Files</p>
+                            <button class="delete" aria-label="close" id="closeUploadModal"></button>
+                        </header>
+                        <section class="modal-card-body">
+                            <form asp-action="UploadFiles" method="post" enctype="multipart/form-data" id="uploadForm">
+                                <div class="field">
+                                    <div class="control has-text-centered">
+                                        <div class="file has-name is-boxed" id="dropZone">
+                                            <label class="file-label">
+                                                <input class="file-input" type="file" name="uploadedFiles" multiple id="fileInput" />
+                                                <span class="file-cta">
+                                                    <span class="file-icon">
+                                                        <i class="fas fa-upload"></i>
+                                                    </span>
+                                                    <span class="file-label">Choose files or drag and drop...</span>
+                                                </span>
+                                                <span class="file-name" id="fileInputName">No files selected</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                            </form>
+                        </section>
+                        <footer class="modal-card-foot">
+                            <button type="submit" form="uploadForm" class="button is-link">Upload</button>
+                            <button class="button" id="cancelUpload">Cancel</button>
+                        </footer>
+                    </div>
+                </div>
+
+
                 <!-- Move Button -->
 
-                <button type="button" id="moveButton" class="button is-info is-outlined">
-                    <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File
-                </button>
+                        <button type="button" id="moveButton" class="button is-info is-outlined">
+                            <i class="fa-solid fa-arrows-up-down-left-right"></i> &nbsp;Move File
+                        </button>
 
-                <!-- Compress Button -->
+                        <!-- Compress Button -->
 
-                <button type="button" id="compressButton" class="button is-warning is-outlined">
-                    <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress
-                </button>
+                        <button type="button" id="compressButton" class="button is-warning is-outlined">
+                            <i class="fa-solid fa-file-zipper"></i> &nbsp;Compress
+                        </button>
 
-                <!-- Decompress Button --> 
-                <button type="button" id="decompressButton" class="button is-primary is-outlined">
-                    <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress
-                </button>
+                        <!-- Decompress Button --> 
+                        <button type="button" id="decompressButton" class="button is-primary is-outlined">
+                            <i class="fa-solid fa-file-zipper"></i> &nbsp;Decompress
+                        </button>
 
-                <form asp-action="Decompress" method="post" id="decompressForm" style="display: none;">
-                    <input type="hidden" name="archiveName" id="decompressArchiveName" />
-                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                </form>
-
-
-
-
-                <button type="button" id="deleteButton" class="button is-danger is-outlined">
-                    <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
-                </button>
-              </div>
-
-            <!-- Delete Modal -->
-            <div class="modal" id="deleteModal">
-                <div class="modal-background"></div>
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">Confirm Deletion</p>
-                        <button class="delete" aria-label="close" id="closeModal"></button>
-                    </header>
-                    <section class="modal-card-body">
-                        <p>Are you sure you want to delete the selected files?</p>
-                    </section>
-                    <footer class="modal-card-foot">
-                        <form asp-action="Delete" method="post" id="deleteForm">
+                        <form asp-action="Decompress" method="post" id="decompressForm" style="display: none;">
+                            <input type="hidden" name="archiveName" id="decompressArchiveName" />
                             <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                            <button type="submit" id="confirmDelete" class="button is-danger">Delete</button>
                         </form>
-                        <button class="button" id="cancelDelete">Cancel</button>
-                    </footer>
-                </div>
-            </div>
 
-            <!-- Compress Modal -->
-            <div class="modal" id="compressModal">
-                <div class="modal-background"></div>
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">Compress Files</p>
-                        <button class="delete" aria-label="close" id="closeCompressModal"></button>
-                    </header>
-                    <section class="modal-card-body">
-                        <div class="field">
-                            <label class="label">Archive Name</label>
-                            <div class="control">
-                                <input class="input" type="text" id="archiveName" placeholder="Enter archive name">
-                            </div>
+
+
+
+                        <button type="button" id="deleteButton" class="button is-danger is-outlined">
+                            <i class="fa-solid fa-trash-can"></i> &nbsp;Delete
+                        </button>
+                      </div>
+
+                    <!-- Delete Modal -->
+                    <div class="modal" id="deleteModal">
+                        <div class="modal-background"></div>
+                        <div class="modal-card">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">Confirm Deletion</p>
+                                <button class="delete" aria-label="close" id="closeModal"></button>
+                            </header>
+                            <section class="modal-card-body">
+                                <p>Are you sure you want to delete the selected files?</p>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <form asp-action="Delete" method="post" id="deleteForm">
+                                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                                    <button type="submit" id="confirmDelete" class="button is-danger">Delete</button>
+                                </form>
+                                <button class="button" id="cancelDelete">Cancel</button>
+                            </footer>
                         </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        <form asp-action="Compress" method="post" id="compressForm">
-                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                            <button type="submit" id="confirmCompress" class="button is-warning">Compress</button>
-                        </form>
-                        <button class="button" id="cancelCompress">Cancel</button>
-                    </footer>
-                </div>
-            </div>
-            <!-- Move Modal -->
-            <div class="modal" id="moveModal">
-                <div class="modal-background"></div>
-                <div class="modal-card">
-                    <header class="modal-card-head">
-                        <p class="modal-card-title">Move Files</p>
-                        <button class="delete" aria-label="close" id="closeMoveModal"></button>
-                    </header>
-                    <section class="modal-card-body">
-                        <div class="field">
-                            <label class="label">Destination Path</label>
-                            <div class="control">
-                                <input class="input" type="text" id="destinationPathInput" placeholder="Enter destination path">
-                            </div>
+                    </div>
+
+                    <!-- Compress Modal -->
+                    <div class="modal" id="compressModal">
+                        <div class="modal-background"></div>
+                        <div class="modal-card">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">Compress Files</p>
+                                <button class="delete" aria-label="close" id="closeCompressModal"></button>
+                            </header>
+                            <section class="modal-card-body">
+                                <div class="field">
+                                    <label class="label">Archive Name</label>
+                                    <div class="control">
+                                        <input class="input" type="text" id="archiveName" placeholder="Enter archive name">
+                                    </div>
+                                </div>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <form asp-action="Compress" method="post" id="compressForm">
+                                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                                    <button type="submit" id="confirmCompress" class="button is-warning">Compress</button>
+                                </form>
+                                <button class="button" id="cancelCompress">Cancel</button>
+                            </footer>
                         </div>
-                    </section>
-                    <footer class="modal-card-foot">
-                        <form asp-action="Move" method="post" id="moveForm">
-                            <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                            <input type="hidden" name="destinationPath" id="destinationPath" />
-                            <div id="moveSelectedItems"></div>
-                            <button type="submit" id="confirmMove" class="button is-info">Move</button>
-                        </form>
-                        <button class="button" id="cancelMove">Cancel</button>
-                    </footer>
-                </div>
-            </div>
+                    </div>
+                    <!-- Move Modal -->
+                    <div class="modal" id="moveModal">
+                        <div class="modal-background"></div>
+                        <div class="modal-card">
+                            <header class="modal-card-head">
+                                <p class="modal-card-title">Move Files</p>
+                                <button class="delete" aria-label="close" id="closeMoveModal"></button>
+                            </header>
+                            <section class="modal-card-body">
+                                <div class="field">
+                                    <label class="label">Destination Path</label>
+                                    <div class="control">
+                                        <input class="input" type="text" id="destinationPathInput" placeholder="Enter destination path">
+                                    </div>
+                                </div>
+                            </section>
+                            <footer class="modal-card-foot">
+                                <form asp-action="Move" method="post" id="moveForm">
+                                    <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                                    <input type="hidden" name="destinationPath" id="destinationPath" />
+                                    <div id="moveSelectedItems"></div>
+                                    <button type="submit" id="confirmMove" class="button is-info">Move</button>
+                                </form>
+                                <button class="button" id="cancelMove">Cancel</button>
+                            </footer>
+                        </div>
+                    </div>
 
 
          
-            <h2 class="subtitle">Path : @ViewBag.CurrentPath</h2>
-            <table class="table is-fullwidth is-striped">
-                <thead>
-                    <tr>
-                        <th><input type="checkbox" id="selectAll" /></th>
-                        <th>File Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var file in ViewBag.Files)
-                    {
-                        <tr>
-                            <td><input type="checkbox" class="file-checkbox" value="@file" /></td>
-                            <td>
-                                @if (System.IO.Path.HasExtension(file))
-                                {
-                                    <i class="fa-regular fa-file"></i> @file
-                                }
-                                else
-                                {
-                                    <form asp-action="Navigate" method="post" style="display: inline;">
-                                        <i class="fa-regular fa-folder"></i>
-                                        <input type="hidden" name="path" value="@file" />
-                                        <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
-                                        <button type="submit" class="button is-text folder-link" data-folder-name="@file">@file</button>
-                                    </form>
-                                }
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-    </div>
-</div>
+                    <h2 class="subtitle">Path : @ViewBag.CurrentPath</h2>
+                    <table class="table is-fullwidth is-striped">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" id="selectAll" /></th>
+                                <th>File Name</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var file in ViewBag.Files)
+                            {
+                                <tr>
+                                    <td><input type="checkbox" class="file-checkbox" value="@file" /></td>
+                                    <td>
+                                        @if (System.IO.Path.HasExtension(file))
+                                        {
+                                            <i class="fa-regular fa-file"></i> @file
+                                        }
+                                        else
+                                        {
+                                            <form asp-action="Navigate" method="post" style="display: inline;">
+                                                <i class="fa-regular fa-folder"></i>
+                                                <input type="hidden" name="path" value="@file" />
+                                                <input type="hidden" name="currentPath" value="@ViewBag.CurrentPath" />
+                                                <button type="submit" class="button is-text folder-link" data-folder-name="@file">@file</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+            </div>
+        </div>
 
 
 
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-<style>
-    .folder-link {
-        color: #ffffff !important;
-        text-decoration: underline; 
-        background: none; 
-        border: none;
-        padding: 0; 
-        font-size: inherit; 
-    }
+        <style>
+            .folder-link {
+                color: #ffffff !important;
+                text-decoration: underline; 
+                background: none; 
+                border: none;
+                padding: 0; 
+                font-size: inherit; 
+            }
 
-    .folder-link:hover {
-        color: #ffffff !important; 
-        text-decoration: underline !important; 
-    }
+            .folder-link:hover {
+                color: #ffffff !important; 
+                text-decoration: underline !important; 
+            }
 
-    .buttons-container {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 1rem;
-    }
+            .buttons-container {
+                display: flex;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
 
-    .buttons-container .button {
-        margin: 0.5rem;
-    }
-</style>
+            .buttons-container .button {
+                margin: 0.5rem;
+            }
+        </style>
 
 
-<script>
-    // Handle "Select All" checkbox functionality
-    document.getElementById('selectAll').addEventListener('change', function (e) {
-        const checkboxes = document.querySelectorAll('.file-checkbox');
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = e.target.checked;
+        <script>
+            // Handle "Select All" checkbox functionality
+            document.getElementById('selectAll').addEventListener('change', function (e) {
+                const checkboxes = document.querySelectorAll('.file-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = e.target.checked;
+                });
+            });
+
+            // Handle the "Delete" button click event
+            document.getElementById('deleteButton').addEventListener('click', function () {
+                const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+                if (selectedItems.length > 0) {
+                    document.getElementById('deleteModal').classList.add('is-active');
+                } else {
+                    alert('No items selected.');
+                }
+            });
+
+            // Handle closing the delete modal
+            document.getElementById('closeModal').addEventListener('click', function () {
+                document.getElementById('deleteModal').classList.remove('is-active');
+            });
+
+            // Handle cancel delete action
+            document.getElementById('cancelDelete').addEventListener('click', function () {
+                document.getElementById('deleteModal').classList.remove('is-active');
+            });
+
+            // Handle confirm delete action
+            document.getElementById('confirmDelete').addEventListener('click', function () {
+                const form = document.getElementById('deleteForm');
+                const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+                const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+                // Clear existing hidden inputs
+                const existingItems = form.querySelectorAll('input[name="items"]');
+                existingItems.forEach(input => input.remove());
+
+                // Add hidden inputs for each selected item
+                selectedItems.forEach(item => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'items';
+                    input.value = item;
+                    form.appendChild(input);
+                });
+            });
+
+            // Handle the "Compress" button click event
+            document.getElementById('compressButton').addEventListener('click', function () {
+                const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+                if (selectedItems.length > 0) {
+                    document.getElementById('compressModal').classList.add('is-active');
+                } else {
+                    alert('No items selected.');
+                }
+            });
+
+            // Handle closing the compress modal
+            document.getElementById('closeCompressModal').addEventListener('click', function () {
+                document.getElementById('compressModal').classList.remove('is-active');
+            });
+
+            // Handle cancel compress action
+            document.getElementById('cancelCompress').addEventListener('click', function () {
+                document.getElementById('compressModal').classList.remove('is-active');
+            });
+
+            // Handle confirm compress action
+            document.getElementById('confirmCompress').addEventListener('click', function () {
+                const form = document.getElementById('compressForm');
+                const archiveName = document.getElementById('archiveName').value;
+                const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+                const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+                // Add archive name to the form
+                const archiveInput = document.createElement('input');
+                archiveInput.type = 'hidden';
+                archiveInput.name = 'archiveName';
+                archiveInput.value = archiveName;
+                form.appendChild(archiveInput);
+
+                // Clear existing hidden inputs
+                const existingItems = form.querySelectorAll('input[name="items"]');
+                existingItems.forEach(input => input.remove());
+
+                // Add hidden inputs for each selected item
+                selectedItems.forEach(item => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'items';
+                    input.value = item;
+                    form.appendChild(input);
+                });
+            });
+
+            document.getElementById('decompressButton').addEventListener('click', function () {
+                const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+                if (selectedItems.length === 1) {
+                    const archiveName = selectedItems[0].value;
+                    document.getElementById('decompressArchiveName').value = archiveName;
+                    document.getElementById('decompressForm').submit();
+                } else if (selectedItems.length > 1) {
+                    alert('Please select only one archive to decompress.');
+                } else {
+                    alert('No items selected.');
+                }
+            });
+
+
+            // Handle the "Move" button click event
+            document.getElementById('moveButton').addEventListener('click', function () {
+                const selectedItems = document.querySelectorAll('.file-checkbox:checked');
+                if (selectedItems.length > 0) {
+                    document.getElementById('moveModal').classList.add('is-active');
+                } else {
+                    alert('No items selected.');
+                }
+            });
+
+            // Handle closing the move modal
+            document.getElementById('closeMoveModal').addEventListener('click', function () {
+                document.getElementById('moveModal').classList.remove('is-active');
+            });
+
+            // Handle cancel move action
+            document.getElementById('cancelMove').addEventListener('click', function () {
+                document.getElementById('moveModal').classList.remove('is-active');
+            });
+
+            // Handle confirm move action
+            document.getElementById('confirmMove').addEventListener('click', function () {
+                const destinationPath = document.getElementById('destinationPathInput').value;
+                document.getElementById('destinationPath').value = destinationPath;
+
+                const form = document.getElementById('moveForm');
+                const checkboxes = document.querySelectorAll('.file-checkbox:checked');
+                const selectedItems = Array.from(checkboxes).map(cb => cb.value);
+
+                // Clear existing hidden inputs
+                const existingItems = form.querySelectorAll('input[name="items"]');
+                existingItems.forEach(input => input.remove());
+
+                // Add hidden inputs for each selected item
+                selectedItems.forEach(item => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'items';
+                    input.value = item;
+                    document.getElementById('moveSelectedItems').appendChild(input);
+                });
+
+                form.submit();
+            });
+    // Handle the "Upload" button click event
+    document.getElementById('uploadButton').addEventListener('click', function () {
+        document.getElementById('uploadModal').classList.add('is-active');
+    });
+
+    // Handle closing the upload modal
+    document.getElementById('closeUploadModal').addEventListener('click', function () {
+        document.getElementById('uploadModal').classList.remove('is-active');
+    });
+
+    // Handle cancel upload action
+    document.getElementById('cancelUpload').addEventListener('click', function () {
+        document.getElementById('uploadModal').classList.remove('is-active');
+    });
+    document.getElementById('fileInput').addEventListener('change', function () {
+        const fileName = this.files.length > 1 ? this.files.length + ' files selected' : this.files[0]?.name || 'No files selected';
+        document.getElementById('fileInputName').textContent = fileName;
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInputName = document.getElementById('fileInputName');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
         });
-    });
 
-    // Handle the "Delete" button click event
-    document.getElementById('deleteButton').addEventListener('click', function () {
-        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
-        if (selectedItems.length > 0) {
-            document.getElementById('deleteModal').classList.add('is-active');
-        } else {
-            alert('No items selected.');
-        }
-    });
-
-    // Handle closing the delete modal
-    document.getElementById('closeModal').addEventListener('click', function () {
-        document.getElementById('deleteModal').classList.remove('is-active');
-    });
-
-    // Handle cancel delete action
-    document.getElementById('cancelDelete').addEventListener('click', function () {
-        document.getElementById('deleteModal').classList.remove('is-active');
-    });
-
-    // Handle confirm delete action
-    document.getElementById('confirmDelete').addEventListener('click', function () {
-        const form = document.getElementById('deleteForm');
-        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
-        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
-
-        // Clear existing hidden inputs
-        const existingItems = form.querySelectorAll('input[name="items"]');
-        existingItems.forEach(input => input.remove());
-
-        // Add hidden inputs for each selected item
-        selectedItems.forEach(item => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'items';
-            input.value = item;
-            form.appendChild(input);
-        });
-    });
-
-    // Handle the "Compress" button click event
-    document.getElementById('compressButton').addEventListener('click', function () {
-        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
-        if (selectedItems.length > 0) {
-            document.getElementById('compressModal').classList.add('is-active');
-        } else {
-            alert('No items selected.');
-        }
-    });
-
-    // Handle closing the compress modal
-    document.getElementById('closeCompressModal').addEventListener('click', function () {
-        document.getElementById('compressModal').classList.remove('is-active');
-    });
-
-    // Handle cancel compress action
-    document.getElementById('cancelCompress').addEventListener('click', function () {
-        document.getElementById('compressModal').classList.remove('is-active');
-    });
-
-    // Handle confirm compress action
-    document.getElementById('confirmCompress').addEventListener('click', function () {
-        const form = document.getElementById('compressForm');
-        const archiveName = document.getElementById('archiveName').value;
-        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
-        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
-
-        // Add archive name to the form
-        const archiveInput = document.createElement('input');
-        archiveInput.type = 'hidden';
-        archiveInput.name = 'archiveName';
-        archiveInput.value = archiveName;
-        form.appendChild(archiveInput);
-
-        // Clear existing hidden inputs
-        const existingItems = form.querySelectorAll('input[name="items"]');
-        existingItems.forEach(input => input.remove());
-
-        // Add hidden inputs for each selected item
-        selectedItems.forEach(item => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'items';
-            input.value = item;
-            form.appendChild(input);
-        });
-    });
-
-    document.getElementById('decompressButton').addEventListener('click', function () {
-        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
-        if (selectedItems.length === 1) {
-            const archiveName = selectedItems[0].value;
-            document.getElementById('decompressArchiveName').value = archiveName;
-            document.getElementById('decompressForm').submit();
-        } else if (selectedItems.length > 1) {
-            alert('Please select only one archive to decompress.');
-        } else {
-            alert('No items selected.');
-        }
-    });
-
-
-    // Handle the "Move" button click event
-    document.getElementById('moveButton').addEventListener('click', function () {
-        const selectedItems = document.querySelectorAll('.file-checkbox:checked');
-        if (selectedItems.length > 0) {
-            document.getElementById('moveModal').classList.add('is-active');
-        } else {
-            alert('No items selected.');
-        }
-    });
-
-    // Handle closing the move modal
-    document.getElementById('closeMoveModal').addEventListener('click', function () {
-        document.getElementById('moveModal').classList.remove('is-active');
-    });
-
-    // Handle cancel move action
-    document.getElementById('cancelMove').addEventListener('click', function () {
-        document.getElementById('moveModal').classList.remove('is-active');
-    });
-
-    // Handle confirm move action
-    document.getElementById('confirmMove').addEventListener('click', function () {
-        const destinationPath = document.getElementById('destinationPathInput').value;
-        document.getElementById('destinationPath').value = destinationPath;
-
-        const form = document.getElementById('moveForm');
-        const checkboxes = document.querySelectorAll('.file-checkbox:checked');
-        const selectedItems = Array.from(checkboxes).map(cb => cb.value);
-
-        // Clear existing hidden inputs
-        const existingItems = form.querySelectorAll('input[name="items"]');
-        existingItems.forEach(input => input.remove());
-
-        // Add hidden inputs for each selected item
-        selectedItems.forEach(item => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'items';
-            input.value = item;
-            document.getElementById('moveSelectedItems').appendChild(input);
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('is-primary'), false);
         });
 
-        form.submit();
+        // Remove highlight when item is dragged away
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('is-primary'), false);
+        });
+
+        // Handle drop
+        dropZone.addEventListener('drop', handleDrop, false);
+
+        // Update file input and display selected files
+        fileInput.addEventListener('change', updateFileDisplay, false);
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+
+            fileInput.files = files; // Assign dropped files to the file input
+            updateFileDisplay(); // Update the file display
+        }
+
+        function updateFileDisplay() {
+            const files = fileInput.files;
+            const fileNameText = files.length > 1
+                ? `${files.length} files selected`
+                : files[0]?.name || 'No files selected';
+
+            fileInputName.textContent = fileNameText;
+        }
     });
 
-</script>
+
+        </script>

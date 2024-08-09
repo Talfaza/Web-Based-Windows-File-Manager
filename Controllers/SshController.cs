@@ -1,5 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Renci.SshNet;
+using Renci.SshNet.Sftp;
+using Microsoft.AspNetCore.Http;
+using System.IO;
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -288,6 +292,55 @@ namespace WebBasedFileManager.Controllers
                 catch (Exception ex)
                 {
                     ViewBag.Message = $"Error: {ex.Message}";
+                }
+            }
+
+            var files = GetFilesAndDirectories(currentPath);
+            ViewBag.Files = files;
+            ViewBag.CurrentPath = currentPath;
+            return View("Index", _currentModel);
+        }
+        [HttpPost]
+        public IActionResult UploadFiles(List<IFormFile> uploadedFiles, string currentPath)
+        {
+            currentPath = currentPath ?? string.Empty;
+
+            using (var client = new SshClient(_currentModel.Ip, _currentModel.Username, _currentModel.Password))
+            {
+                try
+                {
+                    client.Connect();
+                    if (client.IsConnected)
+                    {
+                        var sftp = new SftpClient(client.ConnectionInfo);
+
+                        sftp.Connect();
+
+                        foreach (var file in uploadedFiles)
+                        {
+                            if (file.Length > 0)
+                            {
+                                var filePath = System.IO.Path.Combine(currentPath, file.FileName);
+                                using (var stream = file.OpenReadStream())
+                                {
+                                    sftp.UploadFile(stream, filePath);
+                                }
+                            }
+                        }
+
+                        sftp.Disconnect();
+
+                        ViewBag.Message = "Files uploaded successfully.";
+                    }
+                    else
+                    {
+                        ViewBag.Message = "Failed to connect to the server.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ViewBag.Message = $"Error: {ex.Message}";
+                    ViewBag.DebugInfo = new List<string> { $"Exception: {ex.Message}" };
                 }
             }
 
