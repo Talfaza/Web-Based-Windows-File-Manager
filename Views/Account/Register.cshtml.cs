@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace WebBasedFileManager.Views.Account
+namespace WebBasedFileManager.Views.Authentification
 {
     public class RegisterModel : PageModel
     {
