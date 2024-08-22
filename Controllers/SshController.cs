@@ -62,7 +62,6 @@ namespace WebBasedFileManager.Controllers
         [HttpPost]
         public IActionResult NavigateUp(string currentPath)
         {
-            // Ensure currentPath is not null or empty
             currentPath = currentPath ?? string.Empty;
 
             // Get the parent directory
